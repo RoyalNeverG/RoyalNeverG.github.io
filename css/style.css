@@ -11347,3 +11347,16 @@ figure.highlight .section {
     padding: 1.5rem 1rem;
   }
 }
+.search input {
+  text-indent: 10px;
+  height: 1.8rem;
+  line-height: 1.9rem;
+  border: none;
+  outline: none;
+}
+.search i {
+  position: absolute;
+  top: 1.35rem;
+  left: 0%;
+  color: #b2b2b2;
+}
