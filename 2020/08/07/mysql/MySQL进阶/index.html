@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="generator" content="Hexo 4.2.0"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>MySQL进阶 - MilkLc</title><meta description="一、存储引擎简介1、MyISAM与InnoDB 的区别   对比项 MyISAM InnoDB    主外键 不支持 支持   事务 不支持 支持   行表锁 表锁，即使操作一条记录也会锁住整个表，不适合高并发的操作 行锁，操作时只锁某一行，不对其他行有影响。适合高并发操作   缓存 只缓存索引，不缓存真实数据 不仅缓存索引还要缓存真实数据，对内存要求较高，而且内存大小对性能有决定性的影响   表"><meta property="og:type" content="blog"><meta property="og:title" content="MySQL进阶"><meta property="og:url" content="http://yoursite.com/2020/08/07/mysql/MySQL%E8%BF%9B%E9%98%B6/"><meta property="og:site_name" content="MilkLc"><meta property="og:description" content="一、存储引擎简介1、MyISAM与InnoDB 的区别   对比项 MyISAM InnoDB    主外键 不支持 支持   事务 不支持 支持   行表锁 表锁，即使操作一条记录也会锁住整个表，不适合高并发的操作 行锁，操作时只锁某一行，不对其他行有影响。适合高并发操作   缓存 只缓存索引，不缓存真实数据 不仅缓存索引还要缓存真实数据，对内存要求较高，而且内存大小对性能有决定性的影响   表"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="http://img.louchen.top/2020/07/20200726202302.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200726202340.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200726203013.png"><meta property="og:image" content="http://img.louchen.top/2020/07/1595766905(1).png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200726203946.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200726204045.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200726205216.png"><meta property="og:image" content="http://img.louchen.top/2020/07/1595767549(1).png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200726205514.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200726205533.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200726205739.png"><meta property="og:image" content="http://img.louchen.top/2020/07/1595768740(1).png"><meta property="og:image" content="http://img.louchen.top/2020/07/1595769151(1).png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200805195259.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200806211738.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200807134829.png"><meta property="og:image" content="http://img.louchen.top/2020/07/1596708745(1).png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200806180727.png"><meta property="og:image" content="http://img.louchen.top/2020/07/1596797141(1).png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200807143909.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200729121312.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200729115230.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200731180801.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200802170003.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200802171135.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200802171213.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200804121232.png"><meta property="og:image" content="http://img.louchen.top/2020/07/1596514031(1).png"><meta property="og:image" content="http://img.louchen.top/2020/07/1596515793(1).png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200804202117.png"><meta property="og:image" content="http://img.louchen.top/2020/07/1596552785(1).png"><meta property="og:image" content="http://img.louchen.top/2020/07/1596554335(1).png"><meta property="og:image" content="http://img.louchen.top/2020/07/1596555083(1).png"><meta property="og:image" content="http://img.louchen.top/2020/07/1596556647.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200805155038.png"><meta property="og:image" content="http://img.louchen.top/2020/07/20200805155100.png"><meta property="og:image" content="c:%5CUsers%5C42119%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20200805150816479.png"><meta property="og:image" content="http://img.louchen.top/2020/07/1596613362(1).png"><meta property="article:published_time" content="2020-08-07T11:31:32.646Z"><meta property="article:modified_time" content="2020-08-07T11:33:17.700Z"><meta property="article:author" content="lc"><meta property="article:tag" content="MySQL"><meta property="twitter:card" content="summary"><meta property="twitter:image" content="http://img.louchen.top/2020/07/20200726202302.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2020/08/07/mysql/MySQL%E8%BF%9B%E9%98%B6/"},"headline":"MilkLc","image":["http://img.louchen.top/2020/07/20200726202302.png","http://img.louchen.top/2020/07/20200726202340.png","http://img.louchen.top/2020/07/20200726203013.png","http://img.louchen.top/2020/07/1595766905(1).png","http://img.louchen.top/2020/07/20200726203946.png","http://img.louchen.top/2020/07/20200726204045.png","http://img.louchen.top/2020/07/20200726205216.png","http://img.louchen.top/2020/07/1595767549(1).png","http://img.louchen.top/2020/07/20200726205514.png","http://img.louchen.top/2020/07/20200726205533.png","http://img.louchen.top/2020/07/20200726205739.png","http://img.louchen.top/2020/07/1595768740(1).png","http://img.louchen.top/2020/07/1595769151(1).png","http://img.louchen.top/2020/07/20200805195259.png","http://img.louchen.top/2020/07/20200806211738.png","http://img.louchen.top/2020/07/20200807134829.png","http://img.louchen.top/2020/07/1596708745(1).png","http://img.louchen.top/2020/07/20200806180727.png","http://img.louchen.top/2020/07/1596797141(1).png","http://img.louchen.top/2020/07/20200807143909.png","http://img.louchen.top/2020/07/20200729121312.png","http://img.louchen.top/2020/07/20200729115230.png","http://img.louchen.top/2020/07/20200731180801.png","http://img.louchen.top/2020/07/20200802170003.png","http://img.louchen.top/2020/07/20200802171135.png","http://img.louchen.top/2020/07/20200802171213.png","http://img.louchen.top/2020/07/20200804121232.png","http://img.louchen.top/2020/07/1596514031(1).png","http://img.louchen.top/2020/07/1596515793(1).png","http://img.louchen.top/2020/07/20200804202117.png","http://img.louchen.top/2020/07/1596552785(1).png","http://img.louchen.top/2020/07/1596554335(1).png","http://img.louchen.top/2020/07/1596555083(1).png","http://img.louchen.top/2020/07/1596556647.png","http://img.louchen.top/2020/07/20200805155038.png","http://img.louchen.top/2020/07/20200805155100.png","c:%5CUsers%5C42119%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20200805150816479.png","http://img.louchen.top/2020/07/1596613362(1).png"],"datePublished":"2020-08-07T11:31:32.646Z","dateModified":"2020-08-07T11:33:17.700Z","author":{"@type":"Person","name":"lc"},"description":"一、存储引擎简介1、MyISAM与InnoDB 的区别   对比项 MyISAM InnoDB    主外键 不支持 支持   事务 不支持 支持   行表锁 表锁，即使操作一条记录也会锁住整个表，不适合高并发的操作 行锁，操作时只锁某一行，不对其他行有影响。适合高并发操作   缓存 只缓存索引，不缓存真实数据 不仅缓存索引还要缓存真实数据，对内存要求较高，而且内存大小对性能有决定性的影响   表"}</script><link rel="canonical" href="http://yoursite.com/2020/08/07/mysql/MySQL%E8%BF%9B%E9%98%B6/"><link rel="icon" href="/img/favicon.ico"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/css/justifiedGallery.min.css"><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/favicon.ico" alt="MilkLc" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">主页</a><a class="navbar-item" href="/archives">归档</a><a class="navbar-item" href="/categories">分类</a><a class="navbar-item" href="/tags">标签</a><a class="navbar-item" href="/about">关于</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/RoyalNeverG"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><input placeholder="你想要查找什么？" type="text"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-6-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta size-small is-uppercase level is-mobile"><div class="level-left"><time class="level-item" dateTime="2020-08-07T11:31:32.646Z" title="2020-08-07T11:31:32.646Z">2020-08-07</time><span class="level-item"><a class="link-muted" href="/categories/MySQL/">MySQL</a></span><span class="level-item">1 小时 读完 (大约 12195 个字)</span></div></div><h1 class="title is-3 is-size-4-mobile">MySQL进阶</h1><div class="content"><h3 id="一、存储引擎简介"><a href="#一、存储引擎简介" class="headerlink" title="一、存储引擎简介"></a>一、存储引擎简介</h3><h4 id="1、MyISAM与InnoDB-的区别"><a href="#1、MyISAM与InnoDB-的区别" class="headerlink" title="1、MyISAM与InnoDB 的区别"></a>1、MyISAM与InnoDB 的区别</h4><table>
+<thead>
+<tr>
+<th align="left">对比项</th>
+<th align="left">MyISAM</th>
+<th align="left">InnoDB</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">主外键</td>
+<td align="left">不支持</td>
+<td align="left">支持</td>
+</tr>
+<tr>
+<td align="left">事务</td>
+<td align="left">不支持</td>
+<td align="left">支持</td>
+</tr>
+<tr>
+<td align="left">行表锁</td>
+<td align="left">表锁，即使操作一条记录也会锁住整个表，不适合高并发的操作</td>
+<td align="left">行锁，操作时只锁某一行，不对其他行有影响。<strong>适合高并发操作</strong></td>
+</tr>
+<tr>
+<td align="left">缓存</td>
+<td align="left">只缓存索引，不缓存真实数据</td>
+<td align="left">不仅缓存索引还要缓存真实数据，对内存要求较高，而且内存大小对性能有决定性的影响</td>
+</tr>
+<tr>
+<td align="left">表空间</td>
+<td align="left">小</td>
+<td align="left">大</td>
+</tr>
+<tr>
+<td align="left">关注点</td>
+<td align="left">性能</td>
+<td align="left">事务</td>
+</tr>
+<tr>
+<td align="left">默认安装</td>
+<td align="left">Y</td>
+<td align="left">Y</td>
+</tr>
+</tbody></table>
+<ul>
+<li><strong>MySQL5.5版本开始Innodb已经成为Mysql的默认引擎(之前是MyISAM)</strong></li>
+<li><strong>Innodb不支持全文索引，而MyISAM支持全文索引，在涉及全文索引领域的查询效率上MyISAM速度更快高；PS：5.6以后的InnoDB支持全文索引了</strong><a id="more"></a>
+<h3 id="二、七种JOIN"><a href="#二、七种JOIN" class="headerlink" title="二、七种JOIN"></a>二、七种JOIN</h3></li>
+</ul>
+<blockquote>
+<p><strong>A表</strong></p>
+</blockquote>
+<img src="http://img.louchen.top/2020/07/20200726202302.png" style="zoom:80%;" />
+
+<blockquote>
+<p><strong>B表</strong></p>
+</blockquote>
+<img src="http://img.louchen.top/2020/07/20200726202340.png" style="zoom: 80%;" />
+
+<h4 id="1、√左连接-显示A的所有-包含公共部分"><a href="#1、√左连接-显示A的所有-包含公共部分" class="headerlink" title="1、√左连接(显示A的所有,包含公共部分)"></a>1、√左连接(显示A的所有,包含公共部分)</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#左连接</span></span><br><span class="line"><span class="comment"># A左连接B,显示A的所有部分,A没有的显示为null</span></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> hr <span class="keyword">LEFT</span> <span class="keyword">JOIN</span> department <span class="keyword">on</span> hr.depId=department.depId</span><br></pre></td></tr></table></figure>
+
+<img src="http://img.louchen.top/2020/07/20200726203013.png" style="zoom:80%;" />
+
+
+
+<img src="http://img.louchen.top/2020/07/1595766905(1).png" style="zoom:80%;" />
+
+<h4 id="2、左连接-显示A独有的-不包含AB共有"><a href="#2、左连接-显示A独有的-不包含AB共有" class="headerlink" title="2、左连接(显示A独有的,不包含AB共有)"></a>2、左连接(显示A独有的,不包含AB共有)</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># A左连接B, 只显示A部分，不显示公共部分。</span></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> hr <span class="keyword">LEFT</span> <span class="keyword">JOIN</span> department <span class="keyword">on</span> hr.depId=department.depId <span class="keyword">where</span> department.depId <span class="keyword">is</span> <span class="literal">null</span></span><br></pre></td></tr></table></figure>
+
+
+
+<img src="http://img.louchen.top/2020/07/20200726203946.png" style="zoom:80%;" />
+
+
+
+<img src="http://img.louchen.top/2020/07/20200726204045.png" style="zoom:80%;" />
+
+<h4 id="3、√右连接-显示B的所有-包含公共"><a href="#3、√右连接-显示B的所有-包含公共" class="headerlink" title="3、√右连接(显示B的所有,包含公共)"></a>3、√右连接(显示B的所有,包含公共)</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#右连接</span></span><br><span class="line"><span class="comment"># A右连接B,显示B的所有部分</span></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> hr <span class="keyword">right</span> <span class="keyword">JOIN</span> department <span class="keyword">on</span> hr.depId=department.depId</span><br></pre></td></tr></table></figure>
+
+<img src="http://img.louchen.top/2020/07/20200726205216.png" style="zoom:80%;" />
+
+
+
+<img src="http://img.louchen.top/2020/07/1595767549(1).png" style="zoom:80%;" />
+
+<h4 id="4、右连接-显示B的独有，不包含AB公共"><a href="#4、右连接-显示B的独有，不包含AB公共" class="headerlink" title="4、右连接(显示B的独有，不包含AB公共)"></a>4、右连接(显示B的独有，不包含AB公共)</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># A右连接B, 只显示B部分，不显示公共部分。</span></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> hr <span class="keyword">right</span> <span class="keyword">JOIN</span> department <span class="keyword">on</span> hr.depId=department.depId <span class="keyword">where</span> hr.depId <span class="keyword">is</span> <span class="literal">null</span>;</span><br></pre></td></tr></table></figure>
+
+<img src="http://img.louchen.top/2020/07/20200726205514.png" style="zoom:80%;" />
+
+
+
+<img src="http://img.louchen.top/2020/07/20200726205533.png" style="zoom:80%;" />
+
+<h4 id="5、√内连接-等值连接-，只包含AB的公共部分"><a href="#5、√内连接-等值连接-，只包含AB的公共部分" class="headerlink" title="5、√内连接(等值连接)，只包含AB的公共部分"></a>5、√内连接(等值连接)，只包含AB的公共部分</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#内连接</span></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> hr <span class="keyword">INNER</span> <span class="keyword">JOIN</span> department <span class="keyword">on</span> hr.depId=department.depId </span><br><span class="line"><span class="comment">#等值连接 和 内连接一致</span></span><br><span class="line"><span class="comment">#SELECT * from hr,department WHERE hr.depId=department.depId</span></span><br></pre></td></tr></table></figure>
+
+<img src="http://img.louchen.top/2020/07/20200726205739.png" style="zoom:80%;" />
+
+<h4 id="6、union联合，同时包含A和B-不包含公共部分"><a href="#6、union联合，同时包含A和B-不包含公共部分" class="headerlink" title="6、union联合，同时包含A和B,不包含公共部分"></a>6、union联合，同时包含A和B,不包含公共部分</h4><ul>
+<li>union会自动去重</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#查询 A的独有 和 B的独有，不包含AB的共有</span></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> hr <span class="keyword">left</span> <span class="keyword">JOIN</span> department <span class="keyword">on</span> hr.depId=department.depId <span class="keyword">where</span> department.depId <span class="keyword">is</span> <span class="literal">null</span></span><br><span class="line"><span class="keyword">union</span> </span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> hr <span class="keyword">right</span> <span class="keyword">JOIN</span> department <span class="keyword">on</span> hr.depId=department.depId <span class="keyword">where</span> hr.depId <span class="keyword">is</span> <span class="literal">null</span></span><br></pre></td></tr></table></figure>
+
+<img src="http://img.louchen.top/2020/07/1595768740(1).png" style="zoom:80%;" />
+
+<h4 id="7、union联合，包含A和B的所有"><a href="#7、union联合，包含A和B的所有" class="headerlink" title="7、union联合，包含A和B的所有"></a>7、union联合，包含A和B的所有</h4><ul>
+<li>union会自动去重</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#全连接</span></span><br><span class="line"><span class="comment">#包含A的所有,B的所有</span></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> hr <span class="keyword">left</span> <span class="keyword">JOIN</span> department <span class="keyword">on</span> hr.depId=department.depId </span><br><span class="line"><span class="keyword">union</span> </span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">from</span> hr <span class="keyword">right</span> <span class="keyword">JOIN</span> department <span class="keyword">on</span> hr.depId=department.depId</span><br></pre></td></tr></table></figure>
+
+<img src="http://img.louchen.top/2020/07/1595769151(1).png" style="zoom:80%;" />
+
+<h3 id="二、索引"><a href="#二、索引" class="headerlink" title="二、索引"></a>二、索引</h3><h4 id="1、索引的定义"><a href="#1、索引的定义" class="headerlink" title="1、索引的定义"></a>1、索引的定义</h4><p>索引(Index)是帮助MySQL高效获取数据的数据结构，简单的理解为：<strong>排好序的快速查找数据结构</strong></p>
+<p>MySQL官方对索引的定义为：索引(Index)是帮助MySQL高校获取数据的数据结构。<br>可以得到索引的本质：<strong>索引是数据结构</strong></p>
+<p>下图就是一种可能的索引方式（二叉树）示例：</p>
+<img src="http://img.louchen.top/2020/07/20200805195259.png" style="zoom:80%;" />
+
+<p>​        左边是数据表，一共有两列七条记录，最左边的是数据记录的物理地址。为了加快 Col2 的查找，可以维护一个<br>右边所示的二叉查找树，每个节点分别包含索引键值和一个指向对应数据记录物理地址的指 针，这样就可以运用<br>二叉查找在一定的复杂度内获取到相应数据，从而快速的检索出符合条件的记录。<br>​        一般来说索引本身也很大，不可能全部存储在内存中，因此<strong>索引往往以索引文件的形式存储的磁盘上</strong>。</p>
+<h4 id="2、索引的优势和劣势"><a href="#2、索引的优势和劣势" class="headerlink" title="2、索引的优势和劣势"></a>2、索引的优势和劣势</h4><ul>
+<li>优势<ul>
+<li>类似大学图书馆建书目索引，提高数据检索效率，降低数据库的IO成本</li>
+<li>通过索引列对数据进行排序，降低数据排序成本，降低了CPU的消耗</li>
+</ul>
+</li>
+<li>劣势<ul>
+<li>实际上索引也是一张表，该表保存了主键和索引字段，并指向实体表的记录,<strong>所以索引列也是要占用空间的</strong></li>
+<li>虽然索引大大提高了查询速度，同时却会降低更新表的速度,如果对表INSERT,UPDATE和DELETE。<br>因为更新表时，MySQL不仅要不存数据，还要保存一下索引文件每次更新添加了索引列的字段，<br>都会调整因为更新所带来的键值变化后的索引信息</li>
+</ul>
+</li>
+</ul>
+<h4 id="3、索引的分类"><a href="#3、索引的分类" class="headerlink" title="3、索引的分类"></a>3、索引的分类</h4><h5 id="1-主键索引-Primary-Key"><a href="#1-主键索引-Primary-Key" class="headerlink" title="1)主键索引(Primary Key)"></a>1)主键索引(Primary Key)</h5><p>数据表的主键列使用的就是主键索引。</p>
+<p>一张数据表有只能有一个主键，并且主键不能为null，不能重复。</p>
+<p><em>*在mysql的InnoDB的表中，当没有显示的指定表的主键时，InnoDB会自动先检查表中是否有唯一索引的字段，如果有，则选择该字段为默认的主键，否则InnoDB将会自动创建一个6Byte的自增主键。</em>(虽然我们看不到)*</p>
+<h5 id="2-二级索引-辅助索引"><a href="#2-二级索引-辅助索引" class="headerlink" title="2)二级索引(辅助索引)"></a>2)二级索引(辅助索引)</h5><p><strong>二级索引又称为辅助索引，是因为二级索引的叶子节点存储的数据是主键。也就是说，通过二级索引，可以定位主键的位置。</strong></p>
+<p>唯一索引，普通索引，前缀索引等索引属于二级索引。</p>
+<ul>
+<li><p>单值索引</p>
+<ul>
+<li>即一个索引只包含单个列，一个表可以有多个单列索引</li>
+<li>建议一张表索引不要超过5个，优先考虑复合索引</li>
+</ul>
+</li>
+<li><p>唯一索引</p>
+<ul>
+<li>唯一索引也是一种约束。<strong>唯一索引的属性列不能出现重复的数据，但是允许数据为NULL，一张表允许创建多个唯一索引。</strong>建立唯一索引的目的大部分时候都是为了该属性列的数据的唯一性，而不是为了查询效率。</li>
+</ul>
+</li>
+<li><p>复合索引</p>
+<ul>
+<li>即一个索引包含多个列</li>
+</ul>
+</li>
+<li><p>前缀索引</p>
+<ul>
+<li>前缀索引只适用于字符串类型的数据。前缀索引是对文本的前几个字符创建索引，相比普通索引建立的数据更小， 因为只取前几个字符。</li>
+</ul>
+</li>
+<li><p>全文索引(Full Text) </p>
+<ul>
+<li>全文索引主要是为了检索大文本数据中的关键字的信息，是目前搜索引擎数据库使用的一种技术。Mysql5.6之前只有MYISAM引擎支持全文索引，5.6之后InnoDB也支持了全文索引。</li>
+</ul>
+</li>
+</ul>
+<h4 id="4、索引创建和删除"><a href="#4、索引创建和删除" class="headerlink" title="4、索引创建和删除"></a>4、索引创建和删除</h4><blockquote>
+<p>创建</p>
+</blockquote>
+<ul>
+<li><code>create index 索引名 on 表名(字段名)</code></li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">index</span> index_username <span class="keyword">on</span> hr(hrname)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>create table 表名 add index 索引名(字段名)</code></li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> hr <span class="keyword">add</span> <span class="keyword">index</span> index_username(hrname)</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>删除</p>
+</blockquote>
+<ul>
+<li><code>alter table 表名 drop index 索引名</code></li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> hr <span class="keyword">drop</span> <span class="keyword">index</span> index_username</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>drop index 索引名 on 表名</code></li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">drop</span> <span class="keyword">index</span> index_username <span class="keyword">on</span> hr</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>查看表的所有索引</p>
+</blockquote>
+<ul>
+<li><code>show index from 表名</code></li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SHOW</span> <span class="keyword">INDEX</span> <span class="keyword">FROM</span> table_name</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>添加全文索引</p>
+</blockquote>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> <span class="string">`table_name`</span> <span class="keyword">ADD</span> FULLTEXT ( <span class="string">`column`</span>)</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>添加PRIMARY KEY（主键索引）</p>
+</blockquote>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> <span class="string">`table_name`</span> <span class="keyword">ADD</span> PRIMARY <span class="keyword">KEY</span> ( <span class="string">`column`</span> )</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>添加UNIQUE 唯一索引</p>
+</blockquote>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> <span class="string">`table_name`</span> <span class="keyword">ADD</span> <span class="keyword">UNIQUE</span> ( <span class="string">`column`</span> )</span><br></pre></td></tr></table></figure>
+
+<h4 id="5、MySQL主要使用两种索引的数据结构"><a href="#5、MySQL主要使用两种索引的数据结构" class="headerlink" title="5、MySQL主要使用两种索引的数据结构"></a>5、MySQL主要使用两种索引的数据结构</h4><ul>
+<li>full-text全文索引(了解即可)</li>
+<li>R-Tree索引(了解即可)</li>
+</ul>
+<h5 id="1-Hash索引"><a href="#1-Hash索引" class="headerlink" title="1)Hash索引"></a>1)Hash索引</h5><ul>
+<li>对于哈希索引来说，底层的<strong>数据结构就是哈希表</strong>，因此在绝大多数需求为单条记录查询的时候，可以选择哈希索引，查询性能最快；其余大部分场景，建议选择BTree索引</li>
+</ul>
+<h5 id="2-BTree索引"><a href="#2-BTree索引" class="headerlink" title="2)BTree索引"></a>2)BTree索引</h5><h5 id="3-BTree和B-Tree的区别？"><a href="#3-BTree和B-Tree的区别？" class="headerlink" title="3)BTree和B+Tree的区别？"></a>3)BTree和B+Tree的区别？</h5><h6 id="①BTree"><a href="#①BTree" class="headerlink" title="①BTree"></a>①BTree</h6><ul>
+<li>B树的所有节点既存放 键(key) 也存放 数据(data);</li>
+<li>B树的叶子节点都是独立的;</li>
+<li>B树的检索的过程相当于对范围内的每个节点的关键字做二分查找，可能还没有到达叶子节点，检索就结束了</li>
+</ul>
+<img src="http://img.louchen.top/2020/07/20200806211738.png" style="zoom:80%;" />
+
+<h6 id="②B-Tree"><a href="#②B-Tree" class="headerlink" title="②B+Tree"></a>②B+Tree</h6><ul>
+<li>B+树只有叶子节点存放 key (索引值)和 data(数据的物理地址指针)，其他内节点只存放key。</li>
+<li>B+树的叶子节点有一条引用链指向与它相邻的叶子节点。</li>
+<li>B+树的检索效率就很稳定了，任何查找都是从根节点到叶子节点的过程，叶子节点的顺序检索很明显。</li>
+<li>B+树其实就是一个多叉平衡树</li>
+</ul>
+<img src="http://img.louchen.top/2020/07/20200807134829.png" style="zoom:80%;" />
+
+<h5 id="4-MyISAM与InnoDB实现B-Tree的区别？聚集索引和非聚集索引？"><a href="#4-MyISAM与InnoDB实现B-Tree的区别？聚集索引和非聚集索引？" class="headerlink" title="4)MyISAM与InnoDB实现B+Tree的区别？聚集索引和非聚集索引？"></a>4)MyISAM与InnoDB实现B+Tree的区别？聚集索引和非聚集索引？</h5><h6 id="①MyISAM实现的BTree索引-非聚集索引"><a href="#①MyISAM实现的BTree索引-非聚集索引" class="headerlink" title="①MyISAM实现的BTree索引(非聚集索引)"></a>①MyISAM实现的BTree索引(非聚集索引)</h6><p>​        B+Tree叶节点的data域存放的是数据记录的地址。在索引检索的时候，首先按照B+Tree搜索算法搜索索引，如果指定的索引Key存在，则取出其 data 域的值，然后以 data 域的值为地址读取相应的数据记录。这被称为“非聚簇索引”。</p>
+<ul>
+<li><strong>非聚簇索引：</strong>将数据与索引分开存储，索引结构的叶子节点指向了数据对应的物理位置(指针)，<strong>二级索引属于非聚集索引。</strong><ul>
+<li>MYISAM引擎的表的.MYI文件包含了表的索引， 该表的索引(B+树)的每个叶子非叶子节点存储索引， 叶子节点存储索引和索引对应数据的指针，指向.MYD文件的数据。</li>
+<li><strong>非聚集索引的叶子节点并不一定存放数据的指针， 因为二级索引的叶子节点就存放的是主键，根据主键再回表查数据。</strong></li>
+<li><strong>优点：</strong><ul>
+<li><strong>更新代价比聚集索引要小</strong> 。非聚集索引的更新代价就没有聚集索引那么大了，非聚集索引的叶子节点是不存放数据的</li>
+</ul>
+</li>
+<li><strong>缺点：</strong><ul>
+<li>跟聚集索引一样，非聚集索引也依赖于有序的数据</li>
+<li><strong>可能会二次查询(回表)</strong> :这应该是非聚集索引最大的缺点了。 当查到索引对应的指针或主键后，<strong>可能还需要根据指针或主键再到数据文件或表中查询。</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<img src="http://img.louchen.top/2020/07/1596708745(1).png" style="zoom:80%;" />
+
+<img src="http://img.louchen.top/2020/07/20200806180727.png" style="zoom:80%;" />
+
+<h6 id="②InnoDB实现BTree索引-聚集索引"><a href="#②InnoDB实现BTree索引-聚集索引" class="headerlink" title="②InnoDB实现BTree索引(聚集索引)"></a>②InnoDB实现BTree索引(聚集索引)</h6><p>​        其数据文件本身就是索引文件。相比MyISAM，索引文件和数据文件是分离的，其表数据文件本身就是按B+Tree组织的一个索引结构，<strong>树的叶节点data域保存了完整的数据记录</strong>。<strong>这个索引的key是数据表的主键</strong>，因此InnoDB表数据文件本身就是主索引。这被称为“聚簇索引（或聚集索引）”，而其余的索引都作为辅助索引，辅助索引的data域存储相应记录主键的值而不是地址，这也是和MyISAM不同的地方。<strong>在根据主索引搜索时，直接找到key所在的节点即可取出数据</strong>；<strong>在根据辅助索引查找时，则需要先取出主键的值，在走一遍主索引</strong>。 因此，在设计表的时候，不建议使用过长的字段作为主键，也不建议使用非单调的字段作为主键，这样会造成主索引频繁分裂。</p>
+<ul>
+<li><p><strong>聚簇索引：</strong>将数据存储与索引放到了一块，索引结构的叶子节点保存了行数据，<strong>主键索引属于聚集索引。</strong></p>
+<ul>
+<li><p>在 Mysql 中，InnoDB引擎的表的 <code>.ibd</code>文件就包含了该表的索引和数据，对于 InnoDB 引擎表来说，该表的索引(B+树)的每个非叶子节点存储索引，叶子节点存储索引和索引对应的数据。</p>
+</li>
+<li><p><strong>优点：</strong></p>
+<ul>
+<li>聚集索引的查询速度非常的快，因为整个B+树本身就是一颗多叉平衡树，叶子节点也都是有序的，定位到索引的节点，就相当于定位到了数据。</li>
+</ul>
+</li>
+<li><p><strong>缺点：</strong></p>
+<ul>
+<li><p><strong>依赖于有序的数据</strong> ：因为B+树是多路平衡树，如果索引的数据不是有序的，那么就需要在插入时排序，如果数据是整型还好，否则类似于字符串或UUID这种又长又难比较的数据，插入或查找的速度肯定比较慢。</p>
+</li>
+<li><p><strong>更新代价大</strong> ： 如果对索引列的数据被修改时，那么对应的索引也将会被修改， 而且况聚集索引的叶子节点还存放着数据，修改代价肯定是较大的， 所以对于主键索引来说，主键一般都是不可被修改的。</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<img src="http://img.louchen.top/2020/07/1596797141(1).png" style="zoom:80%;" />
+
+<img src="http://img.louchen.top/2020/07/20200807143909.png" style="zoom:80%;" />
+
+<h6 id="③非聚集索引一定要回表查询吗-使用覆盖索引"><a href="#③非聚集索引一定要回表查询吗-使用覆盖索引" class="headerlink" title="③非聚集索引一定要回表查询吗?(使用覆盖索引)"></a>③非聚集索引一定要回表查询吗?(使用覆盖索引)</h6><p><strong>非聚集索引不一定回表查询。</strong></p>
+<blockquote>
+<p>试想一种情况，用户准备使用SQL查询用户名，而用户名字段正好建立了索引。</p>
+</blockquote>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">name</span> <span class="keyword">FROM</span> <span class="keyword">table</span> <span class="keyword">WHERE</span> username=<span class="string">'guang19'</span>;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>那么这个索引的key本身就是name，查到对应的name直接返回就行了，无需回表查询。</p>
+</blockquote>
+<p><strong>即使是MYISAM也是这样，虽然MYISAM的主键索引确实需要回表， 因为它的主键索引的叶子节点存放的是指针。但是如果SQL查的就是主键呢?</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">id</span> <span class="keyword">FROM</span> <span class="keyword">table</span> <span class="keyword">WHERE</span> <span class="keyword">id</span>=<span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+
+<p>主键索引本身的key就是主键，查到返回就行了。这种情况就称之为覆盖索引了。</p>
+<h4 id="6、哪些情况需要创建索引和无需建索引"><a href="#6、哪些情况需要创建索引和无需建索引" class="headerlink" title="6、哪些情况需要创建索引和无需建索引"></a>6、哪些情况需要创建索引和无需建索引</h4><blockquote>
+<p>需要建索引</p>
+</blockquote>
+<ul>
+<li>1.主键自动建立唯一索引</li>
+<li>2.频繁作为查询的条件的字段应该创建索引</li>
+<li>3.查询中与其他表关联的字段，外键关系建立索引</li>
+<li>4.频繁更新的字段不适合创建索引<ul>
+<li>因为每次更新不单单是更新了记录还会更新索引，加重IO负担</li>
+</ul>
+</li>
+<li>5.Where条件里用不到的字段不创建索引</li>
+<li>6.单间/组合索引的选择问题，who？（在高并发下倾向创建<strong>组合索引</strong>）</li>
+<li>7.查询中排序的字段，排序字段若通过索引去访问将大大提高排序的速度</li>
+<li>8.查询中统计或者分组字段</li>
+</ul>
+<blockquote>
+<p>无需建索引</p>
+</blockquote>
+<ul>
+<li>1.表记录太少</li>
+<li>2.经常增删改的表</li>
+<li>3.数据重复且分布平均的表字段，因此应该只为经常查询和经常排序的数据列建立索引。<br>注意，如果某个数据列包含许多重复的内容，为它建立索引就没有太大的实际效果。</li>
+</ul>
+<h4 id="7、使用EXPLAIN-SQL语句来实现性能分析"><a href="#7、使用EXPLAIN-SQL语句来实现性能分析" class="headerlink" title="7、使用EXPLAIN+SQL语句来实现性能分析"></a>7、使用EXPLAIN+SQL语句来实现性能分析</h4><blockquote>
+<p> 参数介绍</p>
+</blockquote>
+<img src="http://img.louchen.top/2020/07/20200729121312.png" style="zoom:80%;" />
+
+<h5 id="1-id查询的序列号"><a href="#1-id查询的序列号" class="headerlink" title="1)id查询的序列号"></a>1)<code>id</code>查询的序列号</h5><ul>
+<li>select查询的序列号，包含一组数字，表示查询中执行select子句或操作表的顺序</li>
+<li>三种情况<ul>
+<li>id相同，执行顺序由上至下</li>
+<li>id不同，如果是子查询，id的序号会递增，id值越大优先级越高，越先被执行</li>
+<li>先执行优先级高即序号最大的id,若id相同，则从上到下依次执行</li>
+</ul>
+</li>
+</ul>
+<h5 id="2-select-type查询类型"><a href="#2-select-type查询类型" class="headerlink" title="2)select_type查询类型"></a>2)<code>select_type</code>查询类型</h5><p>查询的类型，主要用于区别：普通查询、联合查询、子查询等的复杂查询</p>
+<ul>
+<li><p>1.<code>SIMPLE</code></p>
+<ul>
+<li>简单的select查询，查询中不包含子查询或者UNION</li>
+</ul>
+</li>
+<li><p>2.<code>PRIMARY</code></p>
+<ul>
+<li>查询中若包含任何复杂的子部分，最外层查询则被标记为primary</li>
+</ul>
+</li>
+<li><p>3.<code>SUBQUERY</code></p>
+<ul>
+<li>在SELECT或者WHERE列表中包含了子查询</li>
+</ul>
+</li>
+<li><p>4.<code>DERIVED</code></p>
+<ul>
+<li><p>在FROM列表中包含的子查询被标记为DERIVED（衍生）</p>
+<p>MySQL会递归执行这些子查询，把结果放在临时表里。</p>
+</li>
+</ul>
+</li>
+<li><p>5.<code>UNION</code></p>
+<ul>
+<li>若第二个SELECT出现在UNION之后，则被标记为UNION;<br>若UNION包含在FROM子句的子查询中，外层SELECT将被标记为：DERIVED</li>
+</ul>
+</li>
+<li><p>6.<code>UNION RESULT</code></p>
+<ul>
+<li>从UNION表获取结果的SELECT</li>
+</ul>
+</li>
+</ul>
+<h5 id="3-table哪张表"><a href="#3-table哪张表" class="headerlink" title="3)table哪张表"></a>3)<code>table</code>哪张表</h5><ul>
+<li>显示这一行的数据是关于哪张表的</li>
+</ul>
+<h5 id="4-type访问类型"><a href="#4-type访问类型" class="headerlink" title="4)type访问类型"></a>4)<code>type</code>访问类型</h5><p>显示查询使用了何种类型<br>从最好到最差依次是：<br><code>system</code>&gt;<code>const</code>&gt;<code>eq_ref</code>&gt;<code>ref</code>&gt;<code>range</code>&gt;<code>index</code>&gt;<code>ALL</code></p>
+<p>达到<strong>ref</strong>和<strong>range</strong>级别的索引即可</p>
+<ul>
+<li><p><code>system</code></p>
+<ul>
+<li>表只有一行记录（等于系统表），这是const类型的特例，平时不会出现，这个也可以忽略不计</li>
+</ul>
+</li>
+<li><p><code>const</code></p>
+<ul>
+<li>表示通过索引一次就找到了，const用于比较primary key或者unique索引。因为只匹配一行数据，所以很快。如将主键至于where列表中，MySQL就能将该查询转换为一个常量</li>
+</ul>
+</li>
+<li><p><code>eq_ref</code></p>
+<ul>
+<li>唯一性索引，对于每个索引键，表中只有一条记录与之匹配，常见于主键或唯一索引扫描</li>
+<li>即相当于在表中 通过<strong>主键索引或唯一索引只找到一条数据</strong></li>
+</ul>
+</li>
+<li><p><code>ref</code></p>
+<ul>
+<li><p>非唯一索引扫描，返回匹配某个单独值的所有行。<br>本质上也是一种索引访问，它返回所有匹配某个单独值的行，然而，<br>它可能会找到多个符合条件的行，所以他应该属于查找和扫描的混合体</p>
+</li>
+<li><p>通过<strong>非唯一索引扫描找到多条数据</strong></p>
+</li>
+</ul>
+</li>
+<li><p><code>range</code></p>
+<ul>
+<li>只<strong>检索给定范围的行</strong>，使用一个索引来选择行。key列显示使用了哪个索引<br>一般就是在你的where语句中出现了between、&lt;、&gt;、in等的查询<br>这种范围扫描索引扫描比全表扫描要好，因为他只需要开始索引的某一点，而结束语另一点，不用扫描全部索引</li>
+</ul>
+</li>
+<li><p><code>index</code></p>
+<ul>
+<li>Full Index Scan,index与ALL区别为<strong>index类型只遍历索引树</strong>。这通常比ALL快，因为<strong>索引文件通常比数据文件小</strong>。<br>（也就是说虽然all和index都是读全表，但<strong>index是从索引中读取的，而all是从硬盘中读的</strong>）</li>
+</ul>
+</li>
+<li><p><code>all</code></p>
+<ul>
+<li>FullTable Scan,将遍历全表以找到匹配的行 (<strong>效率最差</strong>)</li>
+</ul>
+</li>
+</ul>
+<p><strong>一般来说，得保证查询只是达到range级别，最好达到ref</strong></p>
+<h5 id="5-possible-keys可能用到的索引"><a href="#5-possible-keys可能用到的索引" class="headerlink" title="5)possible_keys可能用到的索引"></a>5)<code>possible_keys</code>可能用到的索引</h5><ul>
+<li>显示可能应用在这张表中的索引,一个或多个。<br>查询涉及的字段上若存在索引，则该索引将被列出，但<strong>不一定被查询实际使用</strong></li>
+</ul>
+<h5 id="6-key真正用到的索引"><a href="#6-key真正用到的索引" class="headerlink" title="6)key真正用到的索引"></a>6)<code>key</code>真正用到的索引</h5><ul>
+<li>实际使用的索引。如果为null则没有使用索引</li>
+<li>查询中若使用了覆盖索引，则索引和查询的select字段重叠</li>
+</ul>
+<h5 id="7-key-len索引中使用的字节数"><a href="#7-key-len索引中使用的字节数" class="headerlink" title="7)key_len索引中使用的字节数"></a>7)<code>key_len</code>索引中使用的字节数</h5><ul>
+<li>表示索引中使用的字节数，可通过该列计算查询中使用的索引的长度。在不损失精确性的情况下，<strong>长度越短越好</strong></li>
+<li>key_len显示的值为<strong>索引最大可能长度，并非实际使用长度</strong>，即key_len是根据表定义计算而得，不是通过表内检索出的</li>
+</ul>
+<h5 id="8-ref引用的索引列"><a href="#8-ref引用的索引列" class="headerlink" title="8)ref引用的索引列"></a>8)<code>ref</code>引用的索引列</h5><ul>
+<li>显示索引那一列被使用了，如果可能的话，是一个常数。那些列或常量被用于查找索引列上的值</li>
+</ul>
+<h5 id="9-rows读取到的行"><a href="#9-rows读取到的行" class="headerlink" title="9)rows读取到的行"></a>9)<code>rows</code>读取到的行</h5><ul>
+<li>根据表统计信息及索引选用情况，<strong>大致估算出找到所需的记录所需要读取的行数</strong></li>
+<li><strong>行数越小越好</strong></li>
+</ul>
+<h5 id="10-Extra其他额外信息"><a href="#10-Extra其他额外信息" class="headerlink" title="10)Extra其他额外信息"></a>10)<code>Extra</code>其他额外信息</h5><p>包含不适合在其他列中显示但十分重要的额外信息</p>
+<ul>
+<li>1.<code>Using filesort</code><ul>
+<li>说明mysql会对数据使用一个外部的索引排序，而不是按照表内的索引顺序进行读取。<br>MySQL中<strong>无法利用索引完成排序操作成为“文件排序”</strong>（<strong>需要优化</strong>）</li>
+</ul>
+</li>
+<li>2.<code>Using temporary</code><ul>
+<li>使用了临时表保存中间结果，MySQL在对查询结果排序时使用临时表。常见于排序order by 和分组查询 group by <strong>(需要优化)</strong></li>
+</ul>
+</li>
+<li>3.<code>Using index</code><ul>
+<li>表示相应的select操作中使用了<strong>覆盖索引</strong>（Coveing Index）,避免访问了表的数据行，<strong>效率不错！</strong><br>如果同时出现using where，表明索引被用来执行索引键值的查找；<br>如果没有同时出现using where，表面索引用来读取数据而非执行查找动作。</li>
+</ul>
+</li>
+<li>4.<code>Using where</code><ul>
+<li>表面使用了where过滤</li>
+</ul>
+</li>
+<li>5.<code>using join buffer</code><ul>
+<li>使用了连接缓存</li>
+</ul>
+</li>
+<li>6.<code>impossible where</code><ul>
+<li>where子句的值总是false，不能用来获取任何元组</li>
+</ul>
+</li>
+<li>7.<code>select tables optimized away</code><ul>
+<li>在没有GROUPBY子句的情况下，基于索引优化MIN/MAX操作或者<br>对于MyISAM存储引擎优化COUNT(*)操作，不必等到执行阶段再进行计算，<br>查询执行计划生成的阶段即完成优化。</li>
+</ul>
+</li>
+<li>8.<code>distinct</code><ul>
+<li>优化distinct，在找到第一匹配的元组后即停止找同样值的工作</li>
+</ul>
+</li>
+</ul>
+<h4 id="8、JOIN表的联合优化"><a href="#8、JOIN表的联合优化" class="headerlink" title="8、JOIN表的联合优化"></a>8、JOIN表的联合优化</h4><h5 id="1-单表"><a href="#1-单表" class="headerlink" title="1)单表"></a>1)单表</h5><ul>
+<li>范围索引导致索引失效。即查询的时候如果查询的范围字段建立了索引，那么会索引失效。应该避开范围字段索引的建立</li>
+</ul>
+<blockquote>
+<p>测试表</p>
+</blockquote>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">drop</span> <span class="keyword">table</span> <span class="keyword">if</span> <span class="keyword">EXISTS</span> article;</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> <span class="string">`article`</span>(</span><br><span class="line"><span class="string">`id`</span> <span class="built_in">INT</span>(<span class="number">10</span>) <span class="keyword">UNSIGNED</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> PRIMARY <span class="keyword">KEY</span> AUTO_INCREMENT,</span><br><span class="line"><span class="string">`author_id`</span> <span class="built_in">INT</span> (<span class="number">10</span>) <span class="keyword">UNSIGNED</span> <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line"><span class="string">`category_id`</span> <span class="built_in">INT</span>(<span class="number">10</span>) <span class="keyword">UNSIGNED</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> , </span><br><span class="line"><span class="string">`views`</span> <span class="built_in">INT</span>(<span class="number">10</span>) <span class="keyword">UNSIGNED</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> , </span><br><span class="line"><span class="string">`comments`</span> <span class="built_in">INT</span>(<span class="number">10</span>) <span class="keyword">UNSIGNED</span> <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line"><span class="string">`title`</span> VARBINARY(<span class="number">255</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line"><span class="string">`content`</span> <span class="built_in">TEXT</span> <span class="keyword">NOT</span> <span class="literal">NULL</span></span><br><span class="line">);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="string">`article`</span>(<span class="string">`author_id`</span>,<span class="string">`category_id`</span> ,<span class="string">`views`</span> ,<span class="string">`comments`</span> ,<span class="string">`title`</span> ,<span class="string">`content`</span> )<span class="keyword">VALUES</span></span><br><span class="line">(<span class="number">1</span>,<span class="number">1</span>,<span class="number">1</span>,<span class="number">1</span>,<span class="string">'1'</span>,<span class="string">'1'</span>),</span><br><span class="line">(<span class="number">2</span>,<span class="number">2</span>,<span class="number">2</span>,<span class="number">2</span>,<span class="string">'2'</span>,<span class="string">'2'</span>),</span><br><span class="line">(<span class="number">3</span>,<span class="number">3</span>,<span class="number">3</span>,<span class="number">3</span>,<span class="string">'3'</span>,<span class="string">'3'</span>);</span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> ARTICLE;</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">index</span> <span class="keyword">from</span> article;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># type:全表扫描, extra:using filesort</span></span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> <span class="keyword">id</span>,author_id <span class="keyword">from</span> article <span class="keyword">where</span> category_id=<span class="number">1</span> <span class="keyword">and</span> comments&gt;<span class="number">1</span> <span class="keyword">order</span> <span class="keyword">by</span> views <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">#建立 category_id和comments和views的联合索引</span></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">index</span> idx_article_ccv <span class="keyword">on</span> article(category_id,comments,views);</span><br><span class="line"><span class="comment">#再次查看执行计划  type:range, extra:using filesort</span></span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> <span class="keyword">id</span>,author_id <span class="keyword">from</span> article <span class="keyword">where</span> category_id=<span class="number">1</span> <span class="keyword">and</span> comments&gt;<span class="number">1</span> <span class="keyword">order</span> <span class="keyword">by</span> views <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">#删除原来的索引</span></span><br><span class="line"><span class="keyword">drop</span> <span class="keyword">index</span> idx_article_ccv <span class="keyword">on</span> article;</span><br><span class="line"><span class="comment">#建立 category_id和views的联合索引. 即不对范围的字段建立索引</span></span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> article <span class="keyword">add</span> <span class="keyword">index</span> idx_article_cv(category_id,views);</span><br><span class="line"></span><br><span class="line"><span class="comment">#再次查看执行计划  type:ref, extra:Using where</span></span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> <span class="keyword">id</span>,author_id <span class="keyword">from</span> article <span class="keyword">where</span> category_id=<span class="number">1</span> <span class="keyword">and</span> comments&gt;<span class="number">1</span> <span class="keyword">order</span> <span class="keyword">by</span> views <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">#得出结论：范围索引导致索引失效。即查询的时候如果查询的范围字段建立了索引，那么会索引失效。应该避开范围字段索引的建立</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="2-两表"><a href="#2-两表" class="headerlink" title="2)两表"></a>2)两表</h5><ul>
+<li>得出结论，我们使用左连接时，即以左表为主表时，需建立右表索引。<br>得出结论，我们使用右连接时，即以右表为主表时，需建立左表索引。<br>即我们可以为 两个表都加索引</li>
+</ul>
+<blockquote>
+<p>测试表</p>
+</blockquote>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> <span class="string">`class`</span>(</span><br><span class="line"><span class="string">`id`</span> <span class="built_in">INT</span>(<span class="number">10</span>) <span class="keyword">UNSIGNED</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> PRIMARY <span class="keyword">KEY</span> AUTO_INCREMENT,</span><br><span class="line"><span class="string">`card`</span> <span class="built_in">INT</span> (<span class="number">10</span>) <span class="keyword">UNSIGNED</span> <span class="keyword">NOT</span> <span class="literal">NULL</span></span><br><span class="line">);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> <span class="string">`book`</span>(</span><br><span class="line"><span class="string">`bookid`</span> <span class="built_in">INT</span>(<span class="number">10</span>) <span class="keyword">UNSIGNED</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> PRIMARY <span class="keyword">KEY</span> AUTO_INCREMENT,</span><br><span class="line"><span class="string">`card`</span> <span class="built_in">INT</span> (<span class="number">10</span>) <span class="keyword">UNSIGNED</span> <span class="keyword">NOT</span> <span class="literal">NULL</span></span><br><span class="line">);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">class</span>(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"> </span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> book(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 执行查询计划</span></span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> book <span class="keyword">left</span> <span class="keyword">JOIN</span> <span class="keyword">class</span> <span class="keyword">on</span> book.card=class.card;</span><br><span class="line"><span class="comment">#建立左表的索引</span></span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> book <span class="keyword">add</span> <span class="keyword">index</span> b(card);</span><br><span class="line"><span class="comment"># row:总共为40; 左表使用了索引，右表为全表扫描</span></span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> book <span class="keyword">left</span> <span class="keyword">JOIN</span> <span class="keyword">class</span> <span class="keyword">on</span> book.card=class.card;</span><br><span class="line"></span><br><span class="line"><span class="comment">#删除左表的索引</span></span><br><span class="line"><span class="keyword">drop</span> <span class="keyword">index</span> b <span class="keyword">on</span> book;</span><br><span class="line"><span class="comment">#建立右表的所索引</span></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">index</span> c <span class="keyword">on</span> <span class="keyword">class</span>(card);</span><br><span class="line"><span class="comment">#再次执行查询计划，左表进行全表扫描，右表type:ref; 右表使用了索引， rows：总共为21</span></span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> book <span class="keyword">left</span> <span class="keyword">JOIN</span> <span class="keyword">class</span> <span class="keyword">on</span> book.card=class.card;</span><br><span class="line"></span><br><span class="line"><span class="comment">#得出结论，我们使用左连接时，即以左表为主表时，需建立右表索引。</span></span><br><span class="line"><span class="comment">#得出结论，我们使用右连接时，即以右表为主表时，需建立左表索引。</span></span><br><span class="line"><span class="comment"># 即我们可以为 两个表都加索引</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="3-三表"><a href="#3-三表" class="headerlink" title="3)三表"></a>3)三表</h5><ul>
+<li>当我们join联立多张表时，建立在其它表的索引即可。</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在上面两表的基础上增加一个表</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> <span class="string">`phone`</span>(</span><br><span class="line"><span class="string">`phoneid`</span> <span class="built_in">INT</span>(<span class="number">10</span>) <span class="keyword">UNSIGNED</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> PRIMARY <span class="keyword">KEY</span> AUTO_INCREMENT,</span><br><span class="line"><span class="string">`card`</span> <span class="built_in">INT</span> (<span class="number">10</span>) <span class="keyword">UNSIGNED</span> <span class="keyword">NOT</span> <span class="literal">NULL</span></span><br><span class="line">)<span class="keyword">ENGINE</span> = <span class="keyword">INNODB</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> phone(card)<span class="keyword">VALUES</span>(<span class="keyword">FLOOR</span>(<span class="number">1</span>+(<span class="keyword">RAND</span>()*<span class="number">20</span>)));</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">index</span> <span class="keyword">from</span> <span class="keyword">class</span>;</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">index</span> <span class="keyword">from</span> book;2</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">index</span> <span class="keyword">from</span> phone;</span><br><span class="line"><span class="comment">#执行查询计划。三张表都没有使用索引，type都是all全表扫描 rows：总共为 60</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> <span class="keyword">class</span> <span class="keyword">left</span> <span class="keyword">JOIN</span> book <span class="keyword">on</span> book.card=class.card <span class="keyword">left</span> <span class="keyword">JOIN</span> phone <span class="keyword">on</span> book.card=phone.card;</span><br><span class="line"><span class="comment">#为leftjon的第二和第三张表建立索引</span></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">index</span> b <span class="keyword">on</span> book(card);</span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> phone <span class="keyword">add</span> <span class="keyword">index</span> p(card);</span><br><span class="line"><span class="comment">#再次执行查询计划，发现 第二和第三张表使用了索引 rows：总共为20+1+1=22</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> <span class="keyword">class</span> <span class="keyword">left</span> <span class="keyword">JOIN</span> book <span class="keyword">on</span> book.card=class.card <span class="keyword">left</span> <span class="keyword">JOIN</span> phone <span class="keyword">on</span> book.card=phone.card;</span><br><span class="line"></span><br><span class="line"><span class="comment">#当我们join联立多张表时，建立在其它表的索引即可。</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><ul>
+<li>尽可能减少join语句中的nestedloop的循环总次数：永远用小结果集驱动大结果集</li>
+<li>优先优化nestedloop的内存循环</li>
+<li>保证join语句中<strong>被驱动表上join条件字段已经被索引</strong></li>
+<li>当无法保证被驱动表的join条件字段被索引且内存充足的前提下，不要太吝啬joinbuffer的设置</li>
+</ul>
+<h4 id="9、索引的失效及优化"><a href="#9、索引的失效及优化" class="headerlink" title="9、索引的失效及优化"></a>9、索引的失效及优化</h4><blockquote>
+<p>表</p>
+</blockquote>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> staffs(</span><br><span class="line"><span class="keyword">id</span> <span class="built_in">INT</span> PRIMARY <span class="keyword">KEY</span> AUTO_INCREMENT,</span><br><span class="line"><span class="string">`name`</span> <span class="built_in">VARCHAR</span>(<span class="number">24</span>)<span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span><span class="string">''</span> <span class="keyword">COMMENT</span><span class="string">'姓名'</span>,</span><br><span class="line"><span class="string">`age`</span> <span class="built_in">INT</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span> <span class="keyword">COMMENT</span><span class="string">'年龄'</span>,</span><br><span class="line"><span class="string">`pos`</span> <span class="built_in">VARCHAR</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span><span class="string">''</span> <span class="keyword">COMMENT</span><span class="string">'职位'</span>,</span><br><span class="line"><span class="string">`add_time`</span> <span class="built_in">TIMESTAMP</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="keyword">CURRENT_TIMESTAMP</span> <span class="keyword">COMMENT</span><span class="string">'入职时间'</span></span><br><span class="line">)<span class="keyword">CHARSET</span> utf8 <span class="keyword">COMMENT</span><span class="string">'员工记录表'</span>;</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> staffs(<span class="string">`name`</span>,<span class="string">`age`</span>,<span class="string">`pos`</span>,<span class="string">`add_time`</span>) <span class="keyword">VALUES</span>(<span class="string">'z3'</span>,<span class="number">22</span>,<span class="string">'manager'</span>,<span class="keyword">NOW</span>());</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> staffs(<span class="string">`name`</span>,<span class="string">`age`</span>,<span class="string">`pos`</span>,<span class="string">`add_time`</span>) <span class="keyword">VALUES</span>(<span class="string">'ls'</span>,<span class="number">22</span>,<span class="string">'manager'</span>,<span class="keyword">NOW</span>());</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> staffs(<span class="string">`name`</span>,<span class="string">`age`</span>,<span class="string">`pos`</span>,<span class="string">`add_time`</span>) <span class="keyword">VALUES</span>(<span class="string">'July'</span>,<span class="number">23</span>,<span class="string">'dev'</span>,<span class="keyword">NOW</span>());</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> staffs(<span class="string">`name`</span>,<span class="string">`age`</span>,<span class="string">`pos`</span>,<span class="string">`add_time`</span>) <span class="keyword">VALUES</span>(<span class="string">'2000'</span>,<span class="number">23</span>,<span class="string">'dev'</span>,<span class="keyword">NOW</span>());</span><br></pre></td></tr></table></figure>
+
+<h5 id="1-全索引匹配"><a href="#1-全索引匹配" class="headerlink" title="1)全索引匹配"></a>1)全索引匹配</h5><ul>
+<li>即建立的索引全部用上</li>
+</ul>
+<h5 id="2-最佳左前缀法则"><a href="#2-最佳左前缀法则" class="headerlink" title="2)最佳左前缀法则"></a>2)最佳左前缀法则</h5><ul>
+<li><p>使用select * 时需要符合最佳左前缀法则。但是使用select 索引字段时，需要符合最佳左前缀法则或者覆盖索引规则</p>
+</li>
+<li><p>如果索引了多例，要遵守最左前缀法则。指的是查询从索引的<strong>最左前列开始并且不跳过索引中的列</strong>。<strong>order by的字段和group by</strong>也要遵守最左前缀法则(<strong>必须为从左到右的顺序，否则索引order by/group by后面的索引字段失效</strong>)，若前面的索引失效，则需要在order by和group by的后建立起完整的左前缀规范</p>
+</li>
+<li><p>必须使用到联合索引的第一个索引，索引才有效。如果只使用第一二四个索引，那么中间缺失的索引和后面的索引列会失效，此时只会用到第一二个索引。</p>
+</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#建立 name和age和pos的联合索引</span></span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> staffs <span class="keyword">add</span> <span class="keyword">index</span> idx_nameAgePos(<span class="keyword">name</span>,age,pos);</span><br><span class="line"></span><br><span class="line"><span class="comment"># 索引失效的情况</span></span><br><span class="line"><span class="comment"># 用到联合索引的第二和第三个，没有用到第一个 type:all全表扫描 </span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> age=<span class="number">22</span> <span class="keyword">and</span> pos=<span class="string">'manager'</span>; </span><br><span class="line"><span class="comment"># 只用到联合索引的第二个 或者  第三个 type:all全表扫描 </span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> pos=<span class="string">'manager'</span>; </span><br><span class="line"></span><br><span class="line"><span class="comment"># 索引有效的情况</span></span><br><span class="line"><span class="comment"># 联合索引的字段全部用到 type:ref   key:idx_nameAgePos</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> pos=<span class="string">'manager'</span> <span class="keyword">and</span> age=<span class="number">22</span> <span class="keyword">and</span> <span class="keyword">name</span>=<span class="string">'ls'</span> </span><br><span class="line"><span class="comment"># 只用到联合索引的第一个和第三个，第二个字段缺失。那么只会使用到第一个索引。</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> <span class="keyword">name</span>=<span class="string">'ls'</span> <span class="keyword">and</span> pos=<span class="string">'manager'</span>;</span><br><span class="line"><span class="comment"># 只用到联合索引的第一个和第二个，那么只会使用到第一个和第二个索引。</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> <span class="keyword">name</span>=<span class="string">'ls'</span> <span class="keyword">and</span> age=<span class="number">22</span>;</span><br><span class="line"><span class="comment"># 只用到联合索引的第一个，那么只会使用到第一个索引。</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> <span class="keyword">name</span>=<span class="string">'ls'</span>;</span><br></pre></td></tr></table></figure>
+
+<h5 id="3-不在索引列上做任何操作（计算、函数、（自动or手动）类型转换），会导致索引失效而转向全表扫描"><a href="#3-不在索引列上做任何操作（计算、函数、（自动or手动）类型转换），会导致索引失效而转向全表扫描" class="headerlink" title="3)不在索引列上做任何操作（计算、函数、（自动or手动）类型转换），会导致索引失效而转向全表扫描"></a>3)不在索引列上做任何操作（计算、函数、（自动or手动）类型转换），会导致索引失效而转向全表扫描</h5><h5 id="4-存储引擎不能使用索引中范围条件右边的列"><a href="#4-存储引擎不能使用索引中范围条件右边的列" class="headerlink" title="4)存储引擎不能使用索引中范围条件右边的列"></a>4)存储引擎不能使用索引中范围条件右边的列</h5><ul>
+<li>即使用的范围自字段的索引，那么范围字段后面的字段索引将会失效</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># key_len=74</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> <span class="keyword">name</span>=<span class="string">'ls'</span>;</span><br><span class="line"><span class="comment"># key_len=78   type=range</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> <span class="keyword">name</span>=<span class="string">'ls'</span> <span class="keyword">and</span> age&gt;<span class="number">22</span> </span><br><span class="line"><span class="comment"># key_len=78   type=range  即范围索引后面的字段索引失效，即只使用到了name和age索引  </span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> <span class="keyword">name</span>=<span class="string">'ls'</span> <span class="keyword">and</span> age&gt;<span class="number">22</span> <span class="keyword">and</span> pos=<span class="string">'manager'</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="5-尽量使用覆盖索引（只访问索引的查询（索引列和查询列一致）），减少select"><a href="#5-尽量使用覆盖索引（只访问索引的查询（索引列和查询列一致）），减少select" class="headerlink" title="5)尽量使用覆盖索引（只访问索引的查询（索引列和查询列一致）），减少select*"></a>5)尽量使用覆盖索引（只访问索引的查询（索引列和查询列一致）），减少select*</h5><ul>
+<li>在select后面使用任一索引字段按需查询效率得到提升</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># extra:Using index</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> <span class="keyword">name</span>,age,pos <span class="keyword">from</span> staffs <span class="keyword">where</span> <span class="keyword">name</span>=<span class="string">'ls'</span> <span class="keyword">and</span> age&gt;<span class="number">22</span></span><br><span class="line"><span class="comment"># extra:Using index condition </span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> <span class="keyword">name</span>=<span class="string">'ls'</span> <span class="keyword">and</span> age&gt;<span class="number">22</span> </span><br><span class="line"><span class="comment">#结论：在select查询后面，使用索引的查询列比使用*多了 Using index，即效果会更好。</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>若where的条件不符合最佳左前缀法则， where使用第二三个索引，但是select后面满足覆盖索引的条件，则结果都可以用 到索引</li>
+</ul>
+<h5 id="6-mysql在使用不等于（！-或者-lt-gt-）的时候无法使用索引会导致全表扫描"><a href="#6-mysql在使用不等于（！-或者-lt-gt-）的时候无法使用索引会导致全表扫描" class="headerlink" title="6)mysql在使用不等于（！=或者&lt;&gt;）的时候无法使用索引会导致全表扫描"></a>6)mysql在使用不等于（！=或者&lt;&gt;）的时候无法使用索引会导致全表扫描</h5><ul>
+<li>使用<code>！=或者&lt;&gt;</code> 导致全表扫描，但是根据具体业务情况分析，该得用的时候还是得用</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># type:all 全表扫描</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> <span class="keyword">name</span>!=<span class="string">'ls'</span></span><br><span class="line"><span class="comment"># type:all 全表扫描</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> <span class="keyword">name</span>&lt;&gt;<span class="string">'ls'</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="7-is-null-is-not-null-也无法使用索引"><a href="#7-is-null-is-not-null-也无法使用索引" class="headerlink" title="7)is null,is not null 也无法使用索引"></a>7)is null,is not null 也无法使用索引</h5><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># type:null 索引失效</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> <span class="keyword">name</span> <span class="keyword">is</span> <span class="literal">null</span></span><br><span class="line"><span class="comment"># type:all 全表扫描</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> <span class="keyword">name</span> <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">null</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="8-like以通配符开头（’-abc…’或者’-abc-’）mysql索引失效会变成全表扫描操作"><a href="#8-like以通配符开头（’-abc…’或者’-abc-’）mysql索引失效会变成全表扫描操作" class="headerlink" title="8)like以通配符开头（’$abc…’或者’%abc..’）mysql索引失效会变成全表扫描操作"></a>8)like以通配符开头（’$abc…’或者’%abc..’）mysql索引失效会变成全表扫描操作</h5><p><strong>解决办法：</strong></p>
+<ul>
+<li><p>like匹配的 <code>%</code> 写右边 即可避免全表扫描  即 like ‘a%’</p>
+</li>
+<li><p>问题：解决like ‘%字符串%’ 索引不被使用的方法？？即在like后面的字段 <strong>前后都加%abc%</strong></p>
+<ul>
+<li>可以使用<strong>主键索引</strong></li>
+<li>使用<strong>覆盖索引</strong>，查询字段<strong>必须是建立覆盖索引字段</strong> ,即查询的字段属于建立的复合索引的子集或本身。否则使用 select * 或者查询到索引外的字段那么会全表扫描</li>
+<li>当覆盖索引指向的字段是varchar(380)及380以上的字段时，覆盖索引会失效！</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`tbl_user`</span>(</span><br><span class="line"><span class="string">`id`</span> <span class="built_in">INT</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line"><span class="string">`name`</span> <span class="built_in">VARCHAR</span>(<span class="number">20</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line"><span class="string">`age`</span><span class="built_in">INT</span>(<span class="number">11</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line"><span class="string">`email`</span> <span class="built_in">VARCHAR</span>(<span class="number">20</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">PRIMARY <span class="keyword">KEY</span>(<span class="string">`id`</span>)</span><br><span class="line">)<span class="keyword">ENGINE</span>=<span class="keyword">INNODB</span> AUTO_INCREMENT=<span class="number">1</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8;</span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> tbl_user(<span class="string">`name`</span>,<span class="string">`age`</span>,<span class="string">`email`</span>)<span class="keyword">VALUES</span>(<span class="string">'1aa1'</span>,<span class="number">21</span>,<span class="string">'a@163.com'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> tbl_user(<span class="string">`name`</span>,<span class="string">`age`</span>,<span class="string">`email`</span>)<span class="keyword">VALUES</span>(<span class="string">'2bb2'</span>,<span class="number">23</span>,<span class="string">'b@163.com'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> tbl_user(<span class="string">`name`</span>,<span class="string">`age`</span>,<span class="string">`email`</span>)<span class="keyword">VALUES</span>(<span class="string">'3cc3'</span>,<span class="number">24</span>,<span class="string">'c@163.com'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> tbl_user(<span class="string">`name`</span>,<span class="string">`age`</span>,<span class="string">`email`</span>)<span class="keyword">VALUES</span>(<span class="string">'4dd4'</span>,<span class="number">26</span>,<span class="string">'d@163.com'</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建 name和age的联合索引</span></span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> tbl_user <span class="keyword">add</span> <span class="keyword">index</span> idx_nameAge(<span class="keyword">name</span>,age);</span><br><span class="line"></span><br><span class="line"><span class="comment">#extra:Using where; Using index 使用到了索引</span></span><br><span class="line"><span class="comment">#id使用了主键索引。name,age使用的联合索引</span></span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">SELECT</span> <span class="keyword">id</span>,<span class="keyword">name</span>,age <span class="keyword">from</span> tbl_user <span class="keyword">where</span> <span class="keyword">name</span> <span class="keyword">like</span> <span class="string">'%a%'</span>;</span><br><span class="line"><span class="comment">#extra:Using where; Using index 使用到了索引</span></span><br><span class="line"><span class="comment">#name使用了覆盖索引。即select的字段是索引字段</span></span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">SELECT</span> <span class="keyword">name</span> <span class="keyword">from</span> tbl_user <span class="keyword">where</span> <span class="keyword">name</span> <span class="keyword">like</span> <span class="string">'%a%'</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">#type:all全表扫描。索引失效</span></span><br><span class="line"><span class="comment">#email没有建立索引，导致索引失效</span></span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">SELECT</span> <span class="keyword">id</span>,<span class="keyword">name</span>,age,email <span class="keyword">from</span> tbl_user <span class="keyword">where</span> <span class="keyword">name</span> <span class="keyword">like</span> <span class="string">'%a%'</span>;</span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> tbl_user <span class="keyword">where</span> <span class="keyword">name</span> <span class="keyword">like</span> <span class="string">'%a%'</span>;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h5 id="9-字符串不加单引号索引失效"><a href="#9-字符串不加单引号索引失效" class="headerlink" title="9)字符串不加单引号索引失效"></a>9)字符串不加单引号索引失效</h5><ul>
+<li>底层会自动进行类型转换</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#type:all全表扫描，extra:Using where</span></span><br><span class="line"><span class="comment"># 索引失效</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> <span class="keyword">name</span>=<span class="number">2000</span>;</span><br></pre></td></tr></table></figure>
+
+<h5 id="10-少用or-用它连接时会索引失效"><a href="#10-少用or-用它连接时会索引失效" class="headerlink" title="10)少用or,用它连接时会索引失效"></a>10)少用or,用它连接时会索引失效</h5><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#type:all全表扫描，extra:Using where</span></span><br><span class="line"><span class="comment"># 索引失效</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> staffs <span class="keyword">where</span> <span class="keyword">name</span>=<span class="string">'july'</span> <span class="keyword">or</span> <span class="keyword">name</span>=<span class="string">'2000'</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="11-like-KK-相当于-常量-，而-KK和-KK-相当于范围"><a href="#11-like-KK-相当于-常量-，而-KK和-KK-相当于范围" class="headerlink" title="11)like KK%相当于=常量 ，而%KK和%KK% 相当于范围"></a>11)like KK%相当于=常量 ，而%KK和%KK% 相当于范围</h5><ul>
+<li>即只要like后面的字段 不以%开头，即算是定值，都能后续索引都有效</li>
+<li>若以%开头，那么当前%的字段索引和后续索引即全部失效，相当于范围字符</li>
+</ul>
+<img src="http://img.louchen.top/2020/07/20200729115230.png" style="zoom: 80%;" />
+
+<h4 id="10、索引面试题分析"><a href="#10、索引面试题分析" class="headerlink" title="10、索引面试题分析"></a>10、索引面试题分析</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> test03(</span><br><span class="line"><span class="keyword">id</span> <span class="built_in">int</span> primary <span class="keyword">key</span> <span class="keyword">not</span> <span class="literal">null</span> auto_increment,</span><br><span class="line">c1 <span class="built_in">char</span>(<span class="number">10</span>),</span><br><span class="line">c2 <span class="built_in">char</span>(<span class="number">10</span>),</span><br><span class="line">c3 <span class="built_in">char</span>(<span class="number">10</span>),</span><br><span class="line">c4 <span class="built_in">char</span>(<span class="number">10</span>),</span><br><span class="line">c5 <span class="built_in">char</span>(<span class="number">10</span>));</span><br><span class="line"></span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> test03(c1,c2,c3,c4,c5) <span class="keyword">values</span> (<span class="string">'a1'</span>,<span class="string">'a2'</span>,<span class="string">'a3'</span>,<span class="string">'a4'</span>,<span class="string">'a5'</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> test03(c1,c2,c3,c4,c5) <span class="keyword">values</span> (<span class="string">'b1'</span>,<span class="string">'b2'</span>,<span class="string">'b3'</span>,<span class="string">'b4'</span>,<span class="string">'b5'</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> test03(c1,c2,c3,c4,c5) <span class="keyword">values</span> (<span class="string">'c1'</span>,<span class="string">'c2'</span>,<span class="string">'c3'</span>,<span class="string">'c4'</span>,<span class="string">'c5'</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> test03(c1,c2,c3,c4,c5) <span class="keyword">values</span> (<span class="string">'d1'</span>,<span class="string">'d2'</span>,<span class="string">'d3'</span>,<span class="string">'d4'</span>,<span class="string">'d5'</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> test03(c1,c2,c3,c4,c5) <span class="keyword">values</span> (<span class="string">'e1'</span>,<span class="string">'e2'</span>,<span class="string">'e3'</span>,<span class="string">'e4'</span>,<span class="string">'e5'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">index</span> idx_test03_c1234 <span class="keyword">on</span> test03(c1,c2,c3,c4);</span><br></pre></td></tr></table></figure>
+
+<p>1、全匹配的索引字段与顺序无关，MYSQL底层会自动帮我们进行重排</p>
+<ul>
+<li>底层自动重排序，与顺序无关</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#索引全部有效</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> test03 <span class="keyword">where</span> c1=<span class="string">'a1'</span> <span class="keyword">and</span> c2=<span class="string">'a2'</span> <span class="keyword">and</span> c4=<span class="string">'a4'</span> <span class="keyword">and</span> c3=<span class="string">'a3'</span></span><br></pre></td></tr></table></figure>
+
+<p>2、范围之后全失效，范围索引也会重排序</p>
+<ul>
+<li>底层MYSQL对索引重排序后顺序为 c1,c2,c3,c4   虽然从c4范围索引后失效，但是c4重排序后面并无其他索引。所以索引全部有效</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#索引全部有效</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> test03 <span class="keyword">where</span> c1=<span class="string">'a1'</span> <span class="keyword">and</span> c2=<span class="string">'a2'</span> <span class="keyword">and</span> c4&gt;<span class="string">'a4'</span> <span class="keyword">and</span> c3=<span class="string">'a3'</span></span><br></pre></td></tr></table></figure>
+
+<p>3、order by必须按照顺序索引排列，当where中的索引字段在order by中时，order by中的索引字段可忽略。当where中的范围索引失效时，需要在order by中重新补上索引来保证其顺序</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#因为c2是常量，所以我们在order by中的c2无效，即order by被优化为c3，所以我们使用的索引为 c1,c2,c3 (其中c1,c2用于查找，c3用于排序)</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> test03 <span class="keyword">where</span> c1=<span class="string">'a1'</span> <span class="keyword">and</span> c2=<span class="string">'a2'</span> <span class="keyword">and</span> c5=<span class="string">'a5'</span> <span class="keyword">order</span> <span class="keyword">by</span> c3,c2</span><br><span class="line"></span><br><span class="line"><span class="comment">#因为我们只用到了c1,在order by中必须按照索引顺序，所有这里我们只用到c1索引。extra: Using filesort 产生文件排序</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> test03 <span class="keyword">where</span> c1=<span class="string">'a1'</span> <span class="keyword">and</span> c5=<span class="string">'a5'</span> <span class="keyword">order</span> <span class="keyword">by</span> c3,c2</span><br><span class="line"></span><br><span class="line"><span class="comment">#where中c1索引有效，order by按照顺序索引，则c1,c2,c3都有效，（其中c1用于查找，c2,c3用于排序）</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> test03 <span class="keyword">where</span> c1=<span class="string">'a1'</span> <span class="keyword">and</span> c5=<span class="string">'a5'</span> <span class="keyword">order</span> <span class="keyword">by</span> c2,c3</span><br><span class="line"></span><br><span class="line"><span class="comment">#where中的c2后范围索引失效，在roder by 中需要重新补上索引c2</span></span><br><span class="line"><span class="comment">#EXPLAIN SELECT * from test03 where c1='a1'  and c2&gt;'a2' and c5='a5' order by c2,c3</span></span><br></pre></td></tr></table></figure>
+
+<p>4、group 也必须按照顺序索引排序，和order by的用法一致</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># c1,c2,c3索引有效（其中c1用于查找，c2,c3用于分组）</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> test03 <span class="keyword">where</span> c1=<span class="string">'a1'</span>  <span class="keyword">and</span> c4=<span class="string">'a4'</span> <span class="keyword">GROUP</span> <span class="keyword">BY</span> c2,c3</span><br><span class="line"><span class="comment">#因为我们只用到了c1,在group by中必须按照索引顺序，所有这里我们只用到c1索引。extra:  Using temporary; 产生临时表  Using filesort 产生文件排序</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> test03 <span class="keyword">where</span> c1=<span class="string">'a1'</span> <span class="keyword">and</span> c4=<span class="string">'a4'</span> <span class="keyword">GROUP</span> <span class="keyword">BY</span>  c3,c2</span><br><span class="line"><span class="comment">#因为c1是常量，所以我们在group by中的c2无效，即group by被优化为c3，所以我们使用的索引为 c1,c2,c3 (其中c1,c2用于查找，c3用于分组)</span></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">from</span> test03 <span class="keyword">where</span> c1=<span class="string">'a1'</span> <span class="keyword">and</span> c2=<span class="string">'a2'</span> <span class="keyword">and</span> c4=<span class="string">'a4'</span> <span class="keyword">GROUP</span> <span class="keyword">BY</span>  c3,c2</span><br></pre></td></tr></table></figure>
+
+<h5 id="where和-order-by-group-by中的索引字段相互独立，只需保证where中的有效索引字段和order-by-group-by中的索引字段有序即可"><a href="#where和-order-by-group-by中的索引字段相互独立，只需保证where中的有效索引字段和order-by-group-by中的索引字段有序即可" class="headerlink" title="where和 order by/group by中的索引字段相互独立，只需保证where中的有效索引字段和order by/group by中的索引字段有序即可"></a><strong>where和 order by/group by中的索引字段相互独立，只需保证where中的有效索引字段和order by/group by中的索引字段有序即可</strong></h5><h4 id="11、小表驱动大表"><a href="#11、小表驱动大表" class="headerlink" title="11、小表驱动大表"></a>11、小表驱动大表</h4><p>小表驱动大表，即小的数据集驱动大的数据集</p>
+<ul>
+<li><p>当b表的数据集小于a表的数据集时，用in优于exists</p>
+<ul>
+<li><pre><code class="sql"><span class="keyword">select</span> * <span class="keyword">from</span> a <span class="keyword">where</span> <span class="keyword">id</span> <span class="keyword">in</span>(<span class="keyword">select</span> <span class="keyword">id</span> <span class="keyword">from</span> b)
+等价于
+<span class="keyword">for</span> <span class="keyword">select</span> <span class="keyword">id</span> <span class="keyword">from</span> b
+<span class="keyword">for</span> <span class="keyword">select</span> * <span class="keyword">from</span> a <span class="keyword">where</span> a.id=b.id
+&lt;!<span class="comment">--￼37--&gt;</span>
+</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+<p>注意：a表与b表的id字段应建立索引</p>
+<ul>
+<li><strong>exists理解</strong><ul>
+<li><code>select ... from table where exists(subquery)</code></li>
+<li>将主查询的数据，放到子查询中做条件验证，根据验证结果（true或false）来决定主查询的数据结果是否得以保留</li>
+</ul>
+</li>
+</ul>
+<h4 id="12、为order-by-group-by排序使用索引"><a href="#12、为order-by-group-by排序使用索引" class="headerlink" title="12、为order by/group by排序使用索引"></a>12、为order by/group by排序使用索引</h4><p>Mysql两种排序方式：文件排序(using filesort需要优化)或有序索引排序</p>
+<p>Mysql能为排序与查询使用相同的索引</p>
+<p>建立索引 KEY_a_b_c(a,b,c) </p>
+<ul>
+<li><p>order by 能使用索引最左前缀法则。没有where的情况，select后的字段满足覆盖索引</p>
+<ul>
+<li>order by a  </li>
+<li>order by a,b</li>
+<li>order by a,b,c</li>
+<li>order by a desc ,b.desc，c.desc  同为升序或降序</li>
+</ul>
+</li>
+<li><p>如果where使用索引的最左前缀定义为常量，则oder by能使用索引，可以使用 select *</p>
+<ul>
+<li>where a =const order by b,c</li>
+</ul>
+</li>
+<li><p>where a =const and b=const order by c</p>
+<ul>
+<li>where a =const order by b,c</li>
+</ul>
+</li>
+<li><p>where a=const and b&gt;const order by b,c     #b范围索引及其后面失效，所以在order by上要补上失效的索引</p>
+</li>
+<li><p>不能使用索引进行排序的情况</p>
+<ul>
+<li>order by a asc,b desc, c desc   #排序不一致</li>
+<li>where g=const order by b,c  #不满足最左前缀法则，丢失a索引</li>
+<li>where a=const order by c  #丢失b索引</li>
+<li>where a=const order by a,d   #d不是索引的一部分</li>
+<li>select *  from 表名 order a,b,c  #select后的字段必须满足覆盖索引的情况，否则filesort</li>
+<li>where a in(…) order by b,c  #a也相当于范围索引，即a后面的索引失效，即order by缺失a索引</li>
+</ul>
+</li>
+</ul>
+<h3 id="三、慢查询日志SQL"><a href="#三、慢查询日志SQL" class="headerlink" title="三、慢查询日志SQL"></a>三、慢查询日志SQL</h3><p>（1）MySQL的慢查询日志是MySQL提供的一种日志记录，<strong>它用来记录在MySQL中响应时间超过阀值的语句</strong>，具 体指运行时间<strong>超过</strong>long_query_time值的SQL，则会被记录到慢查询日志中。 </p>
+<p>（2）具体指运行时间超过long_query_time值的SQL，则会被记录到慢查询日志中。long_query_time的<strong>默认值为 10</strong>，意思是运行10秒以上的语句。 </p>
+<p>（3）由他来查看哪些SQL超出了我们的最大忍耐时间值，<strong>比如一条sql执行超过5秒钟，我们就算慢SQL，希望能 收集超过5秒的sql，结合之前explain进行全面分析。</strong></p>
+<h4 id="1、开启慢查询日志"><a href="#1、开启慢查询日志" class="headerlink" title="1、开启慢查询日志"></a>1、开启慢查询日志</h4><p><code>默认情况下，MySQL 数据库没有开启慢查询日志，需要我们手动来设置这个参数。</code></p>
+<p>当然，如果不是调优需要的话，一般不建议启动该参数，因为开启慢查询日志会或多或少带来一定的性能影响。<br>慢查询日志支持将日志记录写入文件。</p>
+<ul>
+<li>临时开启</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>SQL 语句</th>
+<th>描述</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SHOWVARIABLESLIKE’%slow_query_log%’;</td>
+<td>查看慢查询日志是否开启</td>
+<td>默认情况下 slow_query_log 的值为 OFF，<br/>表示慢查询日志是禁用的</td>
+</tr>
+<tr>
+<td>set global slow_query_log=1;</td>
+<td>开启慢查询日志</td>
+<td></td>
+</tr>
+<tr>
+<td>SHOW VARIABLES LIKE ‘long_query_time%’;</td>
+<td>查看慢查询设定阈值</td>
+<td>单位秒</td>
+</tr>
+<tr>
+<td>setlong_query_time=1</td>
+<td>设定慢查询阈值</td>
+<td>单位秒</td>
+</tr>
+</tbody></table>
+<ul>
+<li>永久开启(配置文件<code>my.ini</code>)</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[mysqld] </span><br><span class="line">slow_query_log=1 </span><br><span class="line">slow_query_log_file=/var/lib/mysql/atguigu-slow.log </span><br><span class="line">long_query_time=3 </span><br><span class="line">log_output=FILE</span><br></pre></td></tr></table></figure>
+
+<p>运行查询时间长的 sql，打开慢查询日志查看</p>
+<h5 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h5><ul>
+<li>我们设置<code>3s</code>为日志慢查询sql  </li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span> long_query_time=<span class="number">3</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#使用sleep测试超过3s的sql的执行</span></span><br><span class="line"><span class="keyword">select</span> <span class="keyword">sleep</span>(<span class="number">4</span>);</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">sleep</span>(<span class="number">5</span>);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>查看慢查询sql日志文件</li>
+</ul>
+<p><code>D:\mysql-5.7.24-winx64\data\LAPTOP-LJJM9R29-slow.log</code></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">MySQL, Version: 5.7.24 (MySQL Community Server (GPL)). started <span class="keyword">with</span>:</span><br><span class="line">TCP Port: <span class="number">3306</span>, Named <span class="keyword">Pipe</span>: MySQL</span><br><span class="line"><span class="built_in">Time</span>                 <span class="keyword">Id</span> Command    Argument</span><br><span class="line"><span class="comment"># Time: 2020-07-31T10:01:19.381079Z</span></span><br><span class="line"><span class="comment"># User@Host: root[root] @ localhost [::1]  Id:     5</span></span><br><span class="line"><span class="comment"># Query_time: 4.000882  Lock_time: 0.000000 Rows_sent: 1  Rows_examined: 0</span></span><br><span class="line"><span class="keyword">use</span> index_test;</span><br><span class="line"><span class="keyword">SET</span> <span class="built_in">timestamp</span>=<span class="number">1596189679</span>;</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">sleep</span>(<span class="number">4</span>);</span><br><span class="line"><span class="comment"># Time: 2020-07-31T10:01:54.843723Z</span></span><br><span class="line"><span class="comment"># User@Host: root[root] @ localhost [::1]  Id:     5</span></span><br><span class="line"><span class="comment"># Query_time: 5.000658  Lock_time: 0.000000 Rows_sent: 1  Rows_examined: 0</span></span><br><span class="line"><span class="keyword">SET</span> <span class="built_in">timestamp</span>=<span class="number">1596189714</span>;</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">sleep</span>(<span class="number">5</span>);</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、使用日志分析工具-mysqldumpslow"><a href="#2、使用日志分析工具-mysqldumpslow" class="headerlink" title="2、使用日志分析工具 mysqldumpslow"></a>2、使用日志分析工具 mysqldumpslow</h4><p>（1） 查看mysqldumpslow的帮助信息</p>
+<img src="http://img.louchen.top/2020/07/20200731180801.png" style="zoom:80%;" />
+
+<p>（2） 常用命名</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#得到返回记录集最多的 10 个 SQL </span></span><br><span class="line">mysqldumpslow -s r -t 10 /var/lib/mysql/atguigu-slow.log</span><br><span class="line"></span><br><span class="line"><span class="comment">#得到访问次数最多的 10 个 SQL </span></span><br><span class="line">mysqldumpslow -s c -t10 /var/lib/mysql/atguigu-slow.log</span><br><span class="line"></span><br><span class="line"><span class="comment">#得到按照时间排序的前 10 条里面含有左连接的查询语句 </span></span><br><span class="line">mysqldumpslow -s t -t 10 -g "leftjoin" /var/lib/mysql/atguigu-slow.log</span><br><span class="line"></span><br><span class="line"><span class="comment">#另外建议在使用这些命令时结合 | 和 more 使用 ，否则有可能出现爆屏情况 </span></span><br><span class="line">mysqldumpslow -s r -t 10 /var/lib/mysql/atguigu-slow.log|more</span><br></pre></td></tr></table></figure>
+
+<h3 id="四、show-profile-查看SQL执行周期"><a href="#四、show-profile-查看SQL执行周期" class="headerlink" title="四、show profile 查看SQL执行周期"></a>四、show profile 查看SQL执行周期</h3><p>利用<code>showprofile</code> 可以查看 sql 的执行周期！</p>
+<h4 id="1、开启profile"><a href="#1、开启profile" class="headerlink" title="1、开启profile"></a>1、开启profile</h4><p>查看 profile 是否开启：<code>show variables like&#39;%profiling%&#39;</code></p>
+<p>如果没有开启，可以执行 <code>set profiling=1</code>开启！</p>
+<img src="http://img.louchen.top/2020/07/20200802170003.png" style="zoom:80%;" />
+
+<h4 id="2、使用profile"><a href="#2、使用profile" class="headerlink" title="2、使用profile"></a>2、使用profile</h4><p>执行 <code>show prifiles</code> 命令，可以查看最近的几次查询。</p>
+<img src="http://img.louchen.top/2020/07/20200802171135.png" style="zoom:80%;" />
+
+<p>根据 Query_ID,可以进一步执行 <code>show profile cpu,block io for query Query_id</code> 来查看 sql 的具体执行步骤。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> profile cpu,<span class="keyword">block</span> io <span class="keyword">for</span> <span class="keyword">query</span> <span class="number">115</span></span><br></pre></td></tr></table></figure>
+
+<img src="http://img.louchen.top/2020/07/20200802171213.png" style="zoom:80%;" />
+
+<h3 id="五、MySQL锁机制"><a href="#五、MySQL锁机制" class="headerlink" title="五、MySQL锁机制"></a>五、MySQL锁机制</h3><h4 id="1、锁的分类"><a href="#1、锁的分类" class="headerlink" title="1、锁的分类"></a>1、锁的分类</h4><h5 id="1-从数据操作的类型（读、写）分"><a href="#1-从数据操作的类型（读、写）分" class="headerlink" title="1)从数据操作的类型（读、写）分"></a>1)从数据操作的类型（读、写）分</h5><ul>
+<li>读锁（共享锁）：针对同一份数据，多个读操作可以同时进行而不会互相影响</li>
+<li>写锁（排它锁）：当前写操作没有完成前，它会阻断其他写锁和读锁。</li>
+</ul>
+<h5 id="2-从对数据操作的颗粒度"><a href="#2-从对数据操作的颗粒度" class="headerlink" title="2)从对数据操作的颗粒度"></a>2)从对数据操作的颗粒度</h5><ul>
+<li>表锁(偏读)<ul>
+<li>开销小，加锁快；不会出现死锁；锁定粒度大，发生锁冲突的概率最高，并发度最低。</li>
+</ul>
+</li>
+<li>行锁(偏写)<ul>
+<li>开销大，加锁慢；会出现死锁；锁定粒度最小，发生锁冲突的概率最低，并发度也最高。</li>
+</ul>
+</li>
+<li>页锁 (了解) <ul>
+<li>开销和加锁时间界于表锁和行锁之间；会出现死锁；锁定粒度界于表锁和行锁之间，并发度一般</li>
+</ul>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>存储引擎</th>
+<th>行锁</th>
+<th>页锁</th>
+<th>表锁</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MyISAM</td>
+<td></td>
+<td></td>
+<td>Y</td>
+</tr>
+<tr>
+<td>InnoDB</td>
+<td>Y</td>
+<td></td>
+<td>Y</td>
+</tr>
+</tbody></table>
+<h4 id="2、表锁-MyISAM偏读"><a href="#2、表锁-MyISAM偏读" class="headerlink" title="2、表锁(MyISAM偏读)"></a>2、表锁(MyISAM偏读)</h4><h5 id="1-特点"><a href="#1-特点" class="headerlink" title="1)特点"></a>1)特点</h5><p>偏向MyISAM存储引擎，开销小，加锁快，无死锁，锁定粒度大，发生锁冲突的概率最高，并发最低</p>
+<h5 id="2-案例"><a href="#2-案例" class="headerlink" title="2)案例"></a>2)案例</h5><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> big_data;</span><br><span class="line"></span><br><span class="line"><span class="comment">#注意这里我们创建myisam的数据库引擎</span></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> mylock (</span><br><span class="line"><span class="keyword">id</span> <span class="built_in">int</span> <span class="keyword">not</span> <span class="literal">null</span> primary <span class="keyword">key</span> auto_increment,</span><br><span class="line"><span class="keyword">name</span> <span class="built_in">varchar</span>(<span class="number">20</span>) <span class="keyword">default</span> <span class="string">''</span></span><br><span class="line">) <span class="keyword">engine</span> myisam;</span><br><span class="line"></span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> mylock(<span class="keyword">name</span>) <span class="keyword">values</span>(<span class="string">'a'</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> mylock(<span class="keyword">name</span>) <span class="keyword">values</span>(<span class="string">'b'</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> mylock(<span class="keyword">name</span>) <span class="keyword">values</span>(<span class="string">'c'</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> mylock(<span class="keyword">name</span>) <span class="keyword">values</span>(<span class="string">'d'</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> mylock(<span class="keyword">name</span>) <span class="keyword">values</span>(<span class="string">'e'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> mylock;</span><br></pre></td></tr></table></figure>
+
+<p><strong>查看表的加锁情况</strong>:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">open</span> <span class="keyword">tables</span>;</span><br></pre></td></tr></table></figure>
+
+<p><strong>为表加写锁或者读锁</strong>：</p>
+<p><code>lock table 表名 write/read,表名2 write/read;</code></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#给mylock加写锁, book表加读锁</span></span><br><span class="line"><span class="keyword">lock</span> <span class="keyword">table</span> mylock <span class="keyword">read</span>,book write;</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://img.louchen.top/2020/07/20200804121232.png" alt=""></p>
+<p><em>当In_use为1时，代表此表加了锁，为0时没有加锁</em></p>
+<p><strong>释放所有锁(解锁)</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">unlock</span> <span class="keyword">tables</span>;</span><br></pre></td></tr></table></figure>
+
+<h6 id="读锁案例解析-共享锁"><a href="#读锁案例解析-共享锁" class="headerlink" title="读锁案例解析(共享锁)"></a>读锁案例解析(共享锁)</h6><p><img src="http://img.louchen.top/2020/07/1596514031(1).png" alt=""></p>
+<h6 id="写锁案例解析-排它锁"><a href="#写锁案例解析-排它锁" class="headerlink" title="写锁案例解析(排它锁)"></a>写锁案例解析(排它锁)</h6><p><img src="http://img.louchen.top/2020/07/1596515793(1).png" alt=""></p>
+<h5 id="3-结论-基于MyISAM"><a href="#3-结论-基于MyISAM" class="headerlink" title="3)结论(基于MyISAM)"></a>3)结论(基于MyISAM)</h5><p>MyISAM在执行查询语句前，会自动给涉及的所有表加读锁，在执行增删改操作前，会自动给锁涉及的表加写锁</p>
+<ul>
+<li>对MyISAM表的读操作(加读锁)，不会阻塞其他进程对同一表的读请求，但会阻塞对同一表的写请求，只有当读锁释放后，才会执行其他进程的写操作</li>
+<li>对MyISAM表的写操作(加写锁)，会阻塞其他进程对同一表的读和写请求，只有当写锁释放后，才会执行其他进程的读和写操作</li>
+<li>简而言之 —-  <strong>读锁阻塞其他进程的写操作，不会阻塞读操作。写锁会阻塞其他进程的读和写操作</strong></li>
+</ul>
+<h5 id="4-分析表锁的情况"><a href="#4-分析表锁的情况" class="headerlink" title="4)分析表锁的情况"></a>4)分析表锁的情况</h5><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">status</span> <span class="keyword">like</span> <span class="string">'table%'</span>;</span><br></pre></td></tr></table></figure>
+
+<img src="http://img.louchen.top/2020/07/20200804202117.png" style="zoom: 80%;" />
+
+<ul>
+<li>Table_locks_immediate <ul>
+<li>产生表级锁定的次数，表示可以立即获得锁的查询次数，每立即获得锁值加1</li>
+</ul>
+</li>
+<li>Table_locks_waited<ul>
+<li>出现表级锁定而发生等待的次数(不能立即获取锁的次数，每等待一次锁值加1)，此值高则说明存在较严重的表级锁争用情况</li>
+</ul>
+</li>
+</ul>
+<p>所以Myisam的读写锁调度是写优先，这也是myisam不适合做写主表的引擎。因为锁表后，其他线程不能做任何操作，大量的更新会使查询难得到锁，从而造成永远阻塞。所以<strong>myisam偏向做读锁表</strong></p>
+<h4 id="3、行锁-InnoDB偏写"><a href="#3、行锁-InnoDB偏写" class="headerlink" title="3、行锁(InnoDB偏写)"></a>3、行锁(InnoDB偏写)</h4><p>偏向InnoDB存储引擎，开销大，加锁慢；会出现死锁；锁定粒度最小，发生锁冲突的概率最低，并发度也最高。</p>
+<p>InnoDB与MyISAM的最大不同点，<strong>InnoDB支持事务，InnoDB采用的是行级锁</strong></p>
+<h5 id="1-创建行锁的条件"><a href="#1-创建行锁的条件" class="headerlink" title="1)创建行锁的条件"></a>1)创建行锁的条件</h5><ul>
+<li><p><strong>表中创建索引</strong>， select 。。。 where  字段（必须是索引） 不然行锁就无效。</p>
+</li>
+<li><p><strong>必须要有事务</strong>，这样才是行锁（排他锁）</p>
+</li>
+</ul>
+<h5 id="2-行锁案例"><a href="#2-行锁案例" class="headerlink" title="2)行锁案例"></a>2)行锁案例</h5><p>注意引擎为INNODB，且行锁存在的条件时<strong>必须有索引(索引必须有效)和必须有事务</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> test_innodb_lock (a <span class="built_in">INT</span>(<span class="number">11</span>),b <span class="built_in">VARCHAR</span>(<span class="number">16</span>))<span class="keyword">ENGINE</span>=<span class="keyword">INNODB</span>;</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">1</span>,<span class="string">'b2'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">3</span>,<span class="string">'3'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">4</span>, <span class="string">'4000'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">5</span>,<span class="string">'5000'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">6</span>, <span class="string">'6000'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">7</span>,<span class="string">'7000'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">8</span>, <span class="string">'8000'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">9</span>,<span class="string">'9000'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">1</span>,<span class="string">'b1'</span>);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> test_innodb_a_ind <span class="keyword">ON</span> test_innodb_lock(a);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> test_innodb_lock_b_ind <span class="keyword">ON</span> test_innodb_lock(b);</span><br></pre></td></tr></table></figure>
+
+<h6 id="可重复读"><a href="#可重复读" class="headerlink" title="可重复读"></a>可重复读</h6><img src="http://img.louchen.top/2020/07/1596552785(1).png" style="zoom: 80%;" />
+
+<h6 id="行锁—修改同一行数据阻塞"><a href="#行锁—修改同一行数据阻塞" class="headerlink" title="行锁—修改同一行数据阻塞"></a><strong>行锁—修改同一行数据阻塞</strong></h6><p><img src="http://img.louchen.top/2020/07/1596554335(1).png" alt=""></p>
+<h6 id="行锁–修改不同行数据正常"><a href="#行锁–修改不同行数据正常" class="headerlink" title="行锁–修改不同行数据正常"></a>行锁–修改不同行数据正常</h6><p><img src="http://img.louchen.top/2020/07/1596555083(1).png" alt=""></p>
+<h6 id="行锁升级为表锁—无索引-索引失效"><a href="#行锁升级为表锁—无索引-索引失效" class="headerlink" title="行锁升级为表锁—无索引/索引失效"></a>行锁升级为表锁—无索引/索引失效</h6><p><img src="http://img.louchen.top/2020/07/1596556647.png" alt=""></p>
+<h5 id="3-分析行锁"><a href="#3-分析行锁" class="headerlink" title="3)分析行锁"></a>3)分析行锁</h5><p><code>show status like &#39;innodb_row_lock%&#39;;</code></p>
+<img src="http://img.louchen.top/2020/07/20200805155038.png" style="zoom:80%;" />
+
+
+
+<img src="http://img.louchen.top/2020/07/20200805155100.png" style="zoom:80%;" />
+
+<h4 id="4、间隙锁-InnoDB"><a href="#4、间隙锁-InnoDB" class="headerlink" title="4、间隙锁(InnoDB)"></a>4、间隙锁(InnoDB)</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">drop</span> <span class="keyword">TABLE</span> <span class="keyword">if</span> <span class="keyword">EXISTS</span> test_innodb_lock </span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> test_innodb_lock (a <span class="built_in">INT</span>(<span class="number">11</span>),b <span class="built_in">VARCHAR</span>(<span class="number">16</span>))<span class="keyword">ENGINE</span>=<span class="keyword">INNODB</span>;</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">1</span>,<span class="string">'b2'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">3</span>,<span class="string">'3'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">4</span>, <span class="string">'4000'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">5</span>,<span class="string">'5000'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">6</span>, <span class="string">'6000'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">7</span>,<span class="string">'7000'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">8</span>, <span class="string">'8000'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">9</span>,<span class="string">'9000'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> test_innodb_lock <span class="keyword">VALUES</span>(<span class="number">1</span>,<span class="string">'b1'</span>);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> test_innodb_a_ind <span class="keyword">ON</span> test_innodb_lock(a);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> test_innodb_lock_b_ind <span class="keyword">ON</span> test_innodb_lock(b);</span><br></pre></td></tr></table></figure>
+
+<p><strong>【什么是间隙锁？】</strong></p>
+<p>当我们用范围条件而不是相等条件检索数据，并请求共享和排它锁时，InnoDB会给符合条件的已有数据记录的索引项加锁；对于键值在条件范围内但并不存在的记录，叫做间隙(GAP)</p>
+<p><strong>【间隙锁的危害】</strong></p>
+<p>因为where条件在检索的通过范围查找的话，它会锁定整个范围内所有的索引键值，<strong>即使这个键值不存在。</strong></p>
+<p>当锁定一个范围键值后，即使某些不存在的键值也会被锁定，而造成锁定的时候无法在锁定健值范围内的任何数据进行<strong>删除/更新/插入操作</strong>。在某些场景下对性造成极大伤害</p>
+<p><img src="C:%5CUsers%5C42119%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20200805150816479.png" alt="image-20200805150816479"></p>
+<h4 id="5、for-update锁定某一行数据"><a href="#5、for-update锁定某一行数据" class="headerlink" title="5、for update锁定某一行数据"></a>5、for update锁定某一行数据</h4><p>使用select * from …. for update 锁定某行数据，前它会话的操作会被阻塞，直到该会话提交</p>
+<p><img src="http://img.louchen.top/2020/07/1596613362(1).png" alt=""></p>
+<h3 id="六、MySQL主从复制"><a href="#六、MySQL主从复制" class="headerlink" title="六、MySQL主从复制"></a>六、MySQL主从复制</h3><p>待续….</p>
+</div><div class="article-tags size-small is-uppercase mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/MySQL/">MySQL</a></div><!--!--></article></div><div class="card"><div class="card-content"><h3 class="menu-label has-text-centered">喜欢这篇文章？打赏一下作者吧</h3><div class="buttons is-centered"><a class="button is-success donate"><span class="icon is-small"><i class="fab fa-weixin"></i></span><span>微信</span><span class="qrcode"><img src="/img/pay.jpg" alt="微信"></span></a></div></div></div><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2020/08/07/mysql/MySQL%E5%9F%BA%E7%A1%80/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">MySQL基础</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2020/07/24/websocket/WebSocket%E7%AE%80%E4%BB%8B/"><span class="level-item">WebSocket和Socket初识</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1"><div class="card widget"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="" src="/img/milk.png" alt="娄晨"></figure><p class="title is-size-4 is-block line-height-inherit">娄晨</p><p class="is-size-6 is-block">学生</p><p class="is-size-6 is-flex justify-content-center"><i class="fas fa-map-marker-alt mr-1"></i><span>中国·武汉</span></p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">文章</p><a href="/archives"><p class="title">70</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">分类</p><a href="/categories"><p class="title">19</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">标签</p><a href="/tags"><p class="title">40</p></a></div></div></nav><div class="level"><a class="level-item button is-primary is-rounded cursor:pointer" href="/img/wechart.jpg" target="_blank" rel="noopener">联系我</a></div><div class="level is-mobile"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com/ppoffice"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Facebook" href="https://facebook.com"><i class="fab fa-facebook"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Dribbble" href="https://dribbble.com"><i class="fab fa-dribbble"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="RSS" href="/"><i class="fas fa-rss"></i></a></div></div></div><div class="card widget" id="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="is-flex" href="#一、存储引擎简介"><span class="mr-2">1</span><span>一、存储引擎简介</span></a><ul class="menu-list"><li><a class="is-flex" href="#1、MyISAM与InnoDB-的区别"><span class="mr-2">1.1</span><span>1、MyISAM与InnoDB 的区别</span></a></li></ul></li><li><a class="is-flex" href="#二、七种JOIN"><span class="mr-2">2</span><span>二、七种JOIN</span></a><ul class="menu-list"><li><a class="is-flex" href="#1、√左连接-显示A的所有-包含公共部分"><span class="mr-2">2.1</span><span>1、√左连接(显示A的所有,包含公共部分)</span></a></li><li><a class="is-flex" href="#2、左连接-显示A独有的-不包含AB共有"><span class="mr-2">2.2</span><span>2、左连接(显示A独有的,不包含AB共有)</span></a></li><li><a class="is-flex" href="#3、√右连接-显示B的所有-包含公共"><span class="mr-2">2.3</span><span>3、√右连接(显示B的所有,包含公共)</span></a></li><li><a class="is-flex" href="#4、右连接-显示B的独有，不包含AB公共"><span class="mr-2">2.4</span><span>4、右连接(显示B的独有，不包含AB公共)</span></a></li><li><a class="is-flex" href="#5、√内连接-等值连接-，只包含AB的公共部分"><span class="mr-2">2.5</span><span>5、√内连接(等值连接)，只包含AB的公共部分</span></a></li><li><a class="is-flex" href="#6、union联合，同时包含A和B-不包含公共部分"><span class="mr-2">2.6</span><span>6、union联合，同时包含A和B,不包含公共部分</span></a></li><li><a class="is-flex" href="#7、union联合，包含A和B的所有"><span class="mr-2">2.7</span><span>7、union联合，包含A和B的所有</span></a></li></ul></li><li><a class="is-flex" href="#二、索引"><span class="mr-2">3</span><span>二、索引</span></a><ul class="menu-list"><li><a class="is-flex" href="#1、索引的定义"><span class="mr-2">3.1</span><span>1、索引的定义</span></a></li><li><a class="is-flex" href="#2、索引的优势和劣势"><span class="mr-2">3.2</span><span>2、索引的优势和劣势</span></a></li><li><a class="is-flex" href="#3、索引的分类"><span class="mr-2">3.3</span><span>3、索引的分类</span></a><ul class="menu-list"><li><a class="is-flex" href="#1-主键索引-Primary-Key"><span class="mr-2">3.3.1</span><span>1)主键索引(Primary Key)</span></a></li><li><a class="is-flex" href="#2-二级索引-辅助索引"><span class="mr-2">3.3.2</span><span>2)二级索引(辅助索引)</span></a></li></ul></li><li><a class="is-flex" href="#4、索引创建和删除"><span class="mr-2">3.4</span><span>4、索引创建和删除</span></a></li><li><a class="is-flex" href="#5、MySQL主要使用两种索引的数据结构"><span class="mr-2">3.5</span><span>5、MySQL主要使用两种索引的数据结构</span></a><ul class="menu-list"><li><a class="is-flex" href="#1-Hash索引"><span class="mr-2">3.5.1</span><span>1)Hash索引</span></a></li><li><a class="is-flex" href="#2-BTree索引"><span class="mr-2">3.5.2</span><span>2)BTree索引</span></a></li><li><a class="is-flex" href="#②B-Tree"><span class="mr-2">3.5.3</span><span>②B+Tree</span></a></li><li><a class="is-flex" href="#③非聚集索引一定要回表查询吗-使用覆盖索引"><span class="mr-2">3.5.4</span><span>③非聚集索引一定要回表查询吗?(使用覆盖索引)</span></a></li></ul></li><li><a class="is-flex" href="#6、哪些情况需要创建索引和无需建索引"><span class="mr-2">3.6</span><span>6、哪些情况需要创建索引和无需建索引</span></a></li><li><a class="is-flex" href="#7、使用EXPLAIN-SQL语句来实现性能分析"><span class="mr-2">3.7</span><span>7、使用EXPLAIN+SQL语句来实现性能分析</span></a><ul class="menu-list"><li><a class="is-flex" href="#1-id查询的序列号"><span class="mr-2">3.7.1</span><span>1)id查询的序列号</span></a></li><li><a class="is-flex" href="#2-select-type查询类型"><span class="mr-2">3.7.2</span><span>2)select_type查询类型</span></a></li><li><a class="is-flex" href="#3-table哪张表"><span class="mr-2">3.7.3</span><span>3)table哪张表</span></a></li><li><a class="is-flex" href="#4-type访问类型"><span class="mr-2">3.7.4</span><span>4)type访问类型</span></a></li><li><a class="is-flex" href="#5-possible-keys可能用到的索引"><span class="mr-2">3.7.5</span><span>5)possible_keys可能用到的索引</span></a></li><li><a class="is-flex" href="#6-key真正用到的索引"><span class="mr-2">3.7.6</span><span>6)key真正用到的索引</span></a></li><li><a class="is-flex" href="#7-key-len索引中使用的字节数"><span class="mr-2">3.7.7</span><span>7)key_len索引中使用的字节数</span></a></li><li><a class="is-flex" href="#8-ref引用的索引列"><span class="mr-2">3.7.8</span><span>8)ref引用的索引列</span></a></li><li><a class="is-flex" href="#9-rows读取到的行"><span class="mr-2">3.7.9</span><span>9)rows读取到的行</span></a></li><li><a class="is-flex" href="#10-Extra其他额外信息"><span class="mr-2">3.7.10</span><span>10)Extra其他额外信息</span></a></li></ul></li><li><a class="is-flex" href="#8、JOIN表的联合优化"><span class="mr-2">3.8</span><span>8、JOIN表的联合优化</span></a><ul class="menu-list"><li><a class="is-flex" href="#1-单表"><span class="mr-2">3.8.1</span><span>1)单表</span></a></li><li><a class="is-flex" href="#2-两表"><span class="mr-2">3.8.2</span><span>2)两表</span></a></li><li><a class="is-flex" href="#3-三表"><span class="mr-2">3.8.3</span><span>3)三表</span></a></li><li><a class="is-flex" href="#总结"><span class="mr-2">3.8.4</span><span>总结</span></a></li></ul></li><li><a class="is-flex" href="#9、索引的失效及优化"><span class="mr-2">3.9</span><span>9、索引的失效及优化</span></a><ul class="menu-list"><li><a class="is-flex" href="#1-全索引匹配"><span class="mr-2">3.9.1</span><span>1)全索引匹配</span></a></li><li><a class="is-flex" href="#2-最佳左前缀法则"><span class="mr-2">3.9.2</span><span>2)最佳左前缀法则</span></a></li><li><a class="is-flex" href="#3-不在索引列上做任何操作（计算、函数、（自动or手动）类型转换），会导致索引失效而转向全表扫描"><span class="mr-2">3.9.3</span><span>3)不在索引列上做任何操作（计算、函数、（自动or手动）类型转换），会导致索引失效而转向全表扫描</span></a></li><li><a class="is-flex" href="#4-存储引擎不能使用索引中范围条件右边的列"><span class="mr-2">3.9.4</span><span>4)存储引擎不能使用索引中范围条件右边的列</span></a></li><li><a class="is-flex" href="#5-尽量使用覆盖索引（只访问索引的查询（索引列和查询列一致）），减少select"><span class="mr-2">3.9.5</span><span>5)尽量使用覆盖索引（只访问索引的查询（索引列和查询列一致）），减少select*</span></a></li><li><a class="is-flex" href="#6-mysql在使用不等于（！-或者-lt-gt-）的时候无法使用索引会导致全表扫描"><span class="mr-2">3.9.6</span><span>6)mysql在使用不等于（！=或者&lt;&gt;）的时候无法使用索引会导致全表扫描</span></a></li><li><a class="is-flex" href="#7-is-null-is-not-null-也无法使用索引"><span class="mr-2">3.9.7</span><span>7)is null,is not null 也无法使用索引</span></a></li><li><a class="is-flex" href="#8-like以通配符开头（’-abc…’或者’-abc-’）mysql索引失效会变成全表扫描操作"><span class="mr-2">3.9.8</span><span>8)like以通配符开头（’$abc…’或者’%abc..’）mysql索引失效会变成全表扫描操作</span></a></li><li><a class="is-flex" href="#9-字符串不加单引号索引失效"><span class="mr-2">3.9.9</span><span>9)字符串不加单引号索引失效</span></a></li><li><a class="is-flex" href="#10-少用or-用它连接时会索引失效"><span class="mr-2">3.9.10</span><span>10)少用or,用它连接时会索引失效</span></a></li><li><a class="is-flex" href="#11-like-KK-相当于-常量-，而-KK和-KK-相当于范围"><span class="mr-2">3.9.11</span><span>11)like KK%相当于=常量 ，而%KK和%KK% 相当于范围</span></a></li></ul></li><li><a class="is-flex" href="#10、索引面试题分析"><span class="mr-2">3.10</span><span>10、索引面试题分析</span></a><ul class="menu-list"><li><a class="is-flex" href="#where和-order-by-group-by中的索引字段相互独立，只需保证where中的有效索引字段和order-by-group-by中的索引字段有序即可"><span class="mr-2">3.10.1</span><span>where和 order by/group by中的索引字段相互独立，只需保证where中的有效索引字段和order by/group by中的索引字段有序即可</span></a></li></ul></li><li><a class="is-flex" href="#11、小表驱动大表"><span class="mr-2">3.11</span><span>11、小表驱动大表</span></a></li><li><a class="is-flex" href="#12、为order-by-group-by排序使用索引"><span class="mr-2">3.12</span><span>12、为order by/group by排序使用索引</span></a></li></ul></li><li><a class="is-flex" href="#三、慢查询日志SQL"><span class="mr-2">4</span><span>三、慢查询日志SQL</span></a><ul class="menu-list"><li><a class="is-flex" href="#1、开启慢查询日志"><span class="mr-2">4.1</span><span>1、开启慢查询日志</span></a><ul class="menu-list"><li><a class="is-flex" href="#测试"><span class="mr-2">4.1.1</span><span>测试</span></a></li></ul></li><li><a class="is-flex" href="#2、使用日志分析工具-mysqldumpslow"><span class="mr-2">4.2</span><span>2、使用日志分析工具 mysqldumpslow</span></a></li></ul></li><li><a class="is-flex" href="#四、show-profile-查看SQL执行周期"><span class="mr-2">5</span><span>四、show profile 查看SQL执行周期</span></a><ul class="menu-list"><li><a class="is-flex" href="#1、开启profile"><span class="mr-2">5.1</span><span>1、开启profile</span></a></li><li><a class="is-flex" href="#2、使用profile"><span class="mr-2">5.2</span><span>2、使用profile</span></a></li></ul></li><li><a class="is-flex" href="#五、MySQL锁机制"><span class="mr-2">6</span><span>五、MySQL锁机制</span></a><ul class="menu-list"><li><a class="is-flex" href="#1、锁的分类"><span class="mr-2">6.1</span><span>1、锁的分类</span></a><ul class="menu-list"><li><a class="is-flex" href="#1-从数据操作的类型（读、写）分"><span class="mr-2">6.1.1</span><span>1)从数据操作的类型（读、写）分</span></a></li><li><a class="is-flex" href="#2-从对数据操作的颗粒度"><span class="mr-2">6.1.2</span><span>2)从对数据操作的颗粒度</span></a></li></ul></li><li><a class="is-flex" href="#2、表锁-MyISAM偏读"><span class="mr-2">6.2</span><span>2、表锁(MyISAM偏读)</span></a><ul class="menu-list"><li><a class="is-flex" href="#1-特点"><span class="mr-2">6.2.1</span><span>1)特点</span></a></li><li><a class="is-flex" href="#写锁案例解析-排它锁"><span class="mr-2">6.2.2</span><span>写锁案例解析(排它锁)</span></a></li><li><a class="is-flex" href="#3-结论-基于MyISAM"><span class="mr-2">6.2.3</span><span>3)结论(基于MyISAM)</span></a></li><li><a class="is-flex" href="#4-分析表锁的情况"><span class="mr-2">6.2.4</span><span>4)分析表锁的情况</span></a></li></ul></li><li><a class="is-flex" href="#3、行锁-InnoDB偏写"><span class="mr-2">6.3</span><span>3、行锁(InnoDB偏写)</span></a><ul class="menu-list"><li><a class="is-flex" href="#1-创建行锁的条件"><span class="mr-2">6.3.1</span><span>1)创建行锁的条件</span></a></li><li><a class="is-flex" href="#行锁升级为表锁—无索引-索引失效"><span class="mr-2">6.3.2</span><span>行锁升级为表锁—无索引/索引失效</span></a></li><li><a class="is-flex" href="#3-分析行锁"><span class="mr-2">6.3.3</span><span>3)分析行锁</span></a></li></ul></li><li><a class="is-flex" href="#4、间隙锁-InnoDB"><span class="mr-2">6.4</span><span>4、间隙锁(InnoDB)</span></a></li><li><a class="is-flex" href="#5、for-update锁定某一行数据"><span class="mr-2">6.5</span><span>5、for update锁定某一行数据</span></a></li></ul></li><li><a class="is-flex" href="#六、MySQL主从复制"><span class="mr-2">7</span><span>六、MySQL主从复制</span></a></li></ul></div></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">链接</h3><ul class="menu-list"><li><a class="level is-mobile is-mobile" href="http://vhr.louchen.top/index.html" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">人事管理</span></span><span class="level-right"><span class="level-item tag">vhr.louchen.top</span></span></a></li></ul></div></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">分类</h3><ul class="menu-list"><li><a class="level is-mobile is-marginless" href="/categories/Git/"><span class="level-start"><span class="level-item">Git</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/IDEA/"><span class="level-start"><span class="level-item">IDEA</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/JavaWeb/"><span class="level-start"><span class="level-item">JavaWeb</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/Java%E5%9F%BA%E7%A1%80/"><span class="level-start"><span class="level-item">Java基础</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/Linux/"><span class="level-start"><span class="level-item">Linux</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/MySQL/"><span class="level-start"><span class="level-item">MySQL</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/Nginx/"><span class="level-start"><span class="level-item">Nginx</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/Redis/"><span class="level-start"><span class="level-item">Redis</span></span><span class="level-end"><span class="level-item tag">15</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/SSM/"><span class="level-start"><span class="level-item">SSM</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/Spring/"><span class="level-start"><span class="level-item">Spring</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/Spring-Boot/"><span class="level-start"><span class="level-item">Spring Boot</span></span><span class="level-end"><span class="level-item tag">22</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/Spring-Cache/"><span class="level-start"><span class="level-item">Spring Cache</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/Spring-Security/"><span class="level-start"><span class="level-item">Spring Security</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/SpringBoot/"><span class="level-start"><span class="level-item">SpringBoot</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/SpringMVC/"><span class="level-start"><span class="level-item">SpringMVC</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/Windows/"><span class="level-start"><span class="level-item">Windows</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/"><span class="level-start"><span class="level-item">并发编程</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/%E8%99%9A%E6%8B%9F%E6%9C%BA/"><span class="level-start"><span class="level-item">虚拟机</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/%E9%A1%B9%E7%9B%AE%E6%9E%84%E5%BB%BA%E9%83%A8%E7%BD%B2/"><span class="level-start"><span class="level-item">项目构建部署</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li></ul></div></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">订阅更新</h3><form action="https://feedburner.google.com/fb/a/mailverify" method="post" target="popupwindow" onsubmit="window.open(&#039;https://feedburner.google.com/fb/a/mailverify?uri=&#039;,&#039;popupwindow&#039;,&#039;scrollbars=yes,width=550,height=520&#039;);return true"><input type="hidden" value="" name="uri"><input type="hidden" name="loc" value="en_US"><div class="field has-addons"><div class="control has-icons-left is-expanded"><input class="input" name="email" type="email" placeholder="Email"><span class="icon is-small is-left"><i class="fas fa-envelope"></i></span></div><div class="control"><input class="button is-primary" type="submit" value="订阅"></div></div></form></div></div></div><div class="column-right-shadow is-hidden-widescreen"></div></div><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen is-hidden-touch is-hidden-desktop-only order-3"><div class="card widget"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content size-small"><p><time dateTime="2020-08-07T11:31:32.683Z">2020-08-07</time></p><p class="title is-6"><a class="link-muted" href="/2020/08/07/mysql/MySQL%E5%9F%BA%E7%A1%80/">MySQL基础</a></p><p class="is-uppercase"><a class="link-muted" href="/categories/MySQL/">MySQL</a></p></div></article><article class="media"><div class="media-content size-small"><p><time dateTime="2020-08-07T11:31:32.646Z">2020-08-07</time></p><p class="title is-6"><a class="link-muted" href="/2020/08/07/mysql/MySQL%E8%BF%9B%E9%98%B6/">MySQL进阶</a></p><p class="is-uppercase"><a class="link-muted" href="/categories/MySQL/">MySQL</a></p></div></article><article class="media"><div class="media-content size-small"><p><time dateTime="2020-07-24T15:14:33.039Z">2020-07-24</time></p><p class="title is-6"><a class="link-muted" href="/2020/07/24/websocket/WebSocket%E7%AE%80%E4%BB%8B/">WebSocket和Socket初识</a></p><p class="is-uppercase"><a class="link-muted" href="/categories/Spring-Boot/">Spring Boot</a></p></div></article><article class="media"><div class="media-content size-small"><p><time dateTime="2020-07-24T15:14:33.038Z">2020-07-24</time></p><p class="title is-6"><a class="link-muted" href="/2020/07/24/websocket/SpringBoot%E6%95%B4%E5%90%88WebSocket/">SpringBoot整合WebSocket</a></p><p class="is-uppercase"><a class="link-muted" href="/categories/Spring-Boot/">Spring Boot</a></p></div></article><article class="media"><div class="media-content size-small"><p><time dateTime="2020-07-24T15:14:33.027Z">2020-07-24</time></p><p class="title is-6"><a class="link-muted" href="/2020/07/24/thread/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">深入理解Java并发编程</a></p><p class="is-uppercase"><a class="link-muted" href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></p></div></article></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">归档</h3><ul class="menu-list"><li><a class="level is-mobile is-marginless" href="/archives/2020/08/"><span class="level-start"><span class="level-item">八月 2020</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2020/07/"><span class="level-start"><span class="level-item">七月 2020</span></span><span class="level-end"><span class="level-item tag">68</span></span></a></li></ul></div></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">标签</h3><div class="field is-grouped is-grouped-multiline"><div class="control"><a class="tags has-addons" href="/tags/ActiveMQ/"><span class="tag">ActiveMQ</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Docker/"><span class="tag">Docker</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Ehcache/"><span class="tag">Ehcache</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/FastDFS/"><span class="tag">FastDFS</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Git/"><span class="tag">Git</span><span class="tag is-grey-lightest">2</span></a></div><div class="control"><a class="tags has-addons" href="/tags/IDEA/"><span class="tag">IDEA</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/JAR/"><span class="tag">JAR</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/JDK1-8/"><span class="tag">JDK1.8</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/JVM/"><span class="tag">JVM</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/JWT/"><span class="tag">JWT</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Java%E5%9F%BA%E7%A1%80/"><span class="tag">Java基础</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Maven/"><span class="tag">Maven</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/MongoDB/"><span class="tag">MongoDB</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/MySQL/"><span class="tag">MySQL</span><span class="tag is-grey-lightest">2</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Nginx/"><span class="tag">Nginx</span><span class="tag is-grey-lightest">2</span></a></div><div class="control"><a class="tags has-addons" href="/tags/OAuth2/"><span class="tag">OAuth2</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Quartz/"><span class="tag">Quartz</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/RESTful/"><span class="tag">RESTful</span><span class="tag is-grey-lightest">2</span></a></div><div class="control"><a class="tags has-addons" href="/tags/RabbitMQ/"><span class="tag">RabbitMQ</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Redis/"><span class="tag">Redis</span><span class="tag is-grey-lightest">16</span></a></div><div class="control"><a class="tags has-addons" href="/tags/SSM/"><span class="tag">SSM</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Servlet/"><span class="tag">Servlet</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Session/"><span class="tag">Session</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Shiro/"><span class="tag">Shiro</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Spring/"><span class="tag">Spring</span><span class="tag is-grey-lightest">2</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Spring-Boot/"><span class="tag">Spring Boot</span><span class="tag is-grey-lightest">7</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Spring-Security/"><span class="tag">Spring Security</span><span class="tag is-grey-lightest">4</span></a></div><div class="control"><a class="tags has-addons" href="/tags/SpringBoot/"><span class="tag">SpringBoot</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/SpringMVC/"><span class="tag">SpringMVC</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Swagger2/"><span class="tag">Swagger2</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/WAR/"><span class="tag">WAR</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/WebSocket/"><span class="tag">WebSocket</span><span class="tag is-grey-lightest">2</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F/"><span class="tag">代理模式</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%8F%8D%E5%B0%84/"><span class="tag">反射</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%A4%9A%E6%95%B0%E6%8D%AE%E6%BA%90/"><span class="tag">多数据源</span><span class="tag is-grey-lightest">3</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/"><span class="tag">多线程</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1/"><span class="tag">定时任务</span><span class="tag is-grey-lightest">2</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E6%B3%9B%E5%9E%8B/"><span class="tag">泛型</span><span class="tag is-grey-lightest">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E6%B6%88%E6%81%AF%E6%9C%8D%E5%8A%A1/"><span class="tag">消息服务</span><span class="tag is-grey-lightest">2</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E9%82%AE%E4%BB%B6%E6%9C%8D%E5%8A%A1/"><span class="tag">邮件服务</span><span class="tag is-grey-lightest">1</span></a></div></div></div></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/favicon.ico" alt="MilkLc" height="28"></a><p class="size-small"><span>&copy; 2020 lc</span>  Powered by <a href="#" target="_blank" rel="noopener">LouChen</a>  </p><p class="size-small"><a href="http://www.miitbeian.gov.cn">鄂ICP备19030764号-1</a></p></div><div style="margin-left:-150px"><span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv" style="color:blue;font-size: 17px"></span> 次</span><span class="post-meta-divider"> | </span><span id="busuanzi_container_site_uv" style="display:none">本站访客数 <span id="busuanzi_value_site_uv" style="color:blue;font-size: 17px"></span> 人</span><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><div class="level-end"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script>moment.locale("zh-CN");</script><script>var IcarusThemeSettings = {
+            site: {
+                url: 'http://yoursite.com',
+                external_link: {"enable":true,"exclude":[]}
+            },
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script src="/js/animation.js"></script><a id="back-to-top" title="回到顶端" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>
